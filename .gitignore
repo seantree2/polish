@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/icon.png
+assets/tray.png
+assets/trayTemplate.png
+assets/trayTemplate@2x.png
+web/apikey.txt
+web/cloudflared
+web/cloudflared.exe
+.DS_Store
+*.log

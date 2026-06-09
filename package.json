@@ -1,0 +1,48 @@
+{
+  "name": "polish",
+  "version": "1.0.0",
+  "description": "Transform selected text anywhere with Claude, via a global keyboard shortcut.",
+  "main": "src/main.js",
+  "author": "Twinkling Tree",
+  "license": "MIT",
+  "scripts": {
+    "generate-icons": "node scripts/make-icons.js",
+    "start": "npm run generate-icons && electron .",
+    "dist": "npm run generate-icons && electron-builder",
+    "dist:mac": "npm run generate-icons && electron-builder --mac",
+    "dist:win": "npm run generate-icons && electron-builder --win",
+    "web": "node web/server.js",
+    "web:share": "node web/server.js --share"
+  },
+  "build": {
+    "appId": "com.twinklingtree.polish",
+    "productName": "Polish",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    }
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  },
+  "devDependencies": {
+    "electron": "^32.3.3",
+    "electron-builder": "^25.0.0"
+  }
+}

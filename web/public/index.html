@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Polish</title>
+  <style>
+    :root { --brand:#8b6ff0; --brand-dark:#a78bff; --bg:#0f0e15; --card:#1a1822; --input:#211f2c; --text:#ececf1; --muted:#9a96a8; --border:#2c2937; --ok:#3fd089; --err:#ff7b6b; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); }
+    header { display:flex; align-items:center; gap:12px; padding:16px 22px; background:var(--card); border-bottom:1px solid var(--border); }
+    .logo { width:38px; height:38px; border-radius:10px; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; }
+    h1 { margin:0; font-size:18px; }
+    .sub { margin:2px 0 0; color:var(--muted); font-size:12px; }
+    main { max-width:1100px; margin:0 auto; padding:20px 22px; display:grid; gap:14px; }
+
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; }
+    label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; }
+    textarea, select, input[type=text] { width:100%; padding:11px; border:1px solid var(--border); border-radius:8px; font:inherit; font-size:14px; background:var(--input); color:var(--text); }
+    textarea::placeholder, input::placeholder, [contenteditable]:empty:before { color:var(--muted); }
+    select option { background:var(--card); color:var(--text); }
+    .controls { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; }
+    .controls .grow { flex:1; min-width:180px; }
+    button { padding:11px 18px; border:none; border-radius:8px; background:var(--brand); color:#fff; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; }
+    button:hover { background:var(--brand-dark); }
+    button:disabled { opacity:.6; cursor:default; }
+    button.secondary { background:#2c2740; color:var(--brand-dark); }
+    button.tiny { padding:6px 12px; font-size:12px; }
+    button.icon { background:transparent; color:var(--muted); padding:6px 9px; font-size:15px; line-height:1; }
+    button.icon:hover { background:#2c2740; color:var(--text); }
+    .status { font-size:12px; color:var(--muted); }
+    .status.ok { color:var(--ok); } .status.err { color:var(--err); }
+
+    #work { display:grid; grid-template-columns:1fr; gap:14px; align-items:start; }
+    #work.open { grid-template-columns:1fr 1fr; }
+    @media (max-width:760px) { #work.open { grid-template-columns:1fr; } }
+
+    .panel { border:1px solid var(--border); border-radius:12px; background:var(--card); display:flex; flex-direction:column; overflow:hidden; }
+    .panel .head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:11px 16px; border-bottom:1px solid var(--border); font-weight:600; font-size:13px; }
+    .panel .head .actions { display:flex; gap:6px; align-items:center; }
+    .panel.canvas .head { background:#241f38; color:var(--brand-dark); }
+
+    .editArea { width:100%; min-height:340px; border:none; background:transparent; color:var(--text);
+      padding:18px 20px; line-height:1.65; font-size:15px; }
+    .editArea:focus { outline:none; }
+    textarea.editArea { resize:vertical; }
+    #after { overflow:auto; }
+    #after:empty:before { content:attr(data-placeholder); color:var(--muted); }
+    #after ul, #after ol { padding-left:24px; margin:8px 0; }
+    #after h3 { font-size:18px; margin:12px 0 6px; }
+    #after p { margin:8px 0; }
+
+    /* formatting toolbar */
+    .ftbar { display:flex; gap:3px; align-items:center; padding:7px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+    .ftbar button { background:transparent; color:var(--text); padding:6px 10px; font-size:13px; font-weight:600; border-radius:6px; }
+    .ftbar button:hover { background:#2c2740; }
+    .ftbar .sep { width:1px; height:18px; background:var(--border); margin:0 4px; }
+
+    #canvas { display:none; }
+    #work.open #canvas { display:flex; }
+
+    /* enlarge */
+    #backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:40; }
+    #canvas.enlarged { position:fixed; inset:24px; z-index:50; box-shadow:0 24px 70px rgba(0,0,0,.6); }
+    #canvas.enlarged #after { flex:1; min-height:0; }
+
+    /* selection rephrase bar */
+    .selbar { position:fixed; display:none; gap:6px; align-items:center; background:#241f38; border:1px solid var(--border); border-radius:9px; padding:6px; z-index:60; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+    .selbar.open { display:flex; }
+    .selbar input { width:230px; padding:6px 9px; font-size:12px; background:var(--input); border:1px solid var(--border); color:var(--text); border-radius:6px; }
+    .selbar button { padding:6px 11px; font-size:12px; }
+    .pill { font-size:11px; color:var(--muted); font-weight:500; }
+    .muted { color:var(--muted); font-size:12px; }
+    header .spacer { flex:1; }
+    .row { display:flex; gap:8px; align-items:center; }
+    /* settings modal */
+    .overlay { position:fixed; inset:0; background:rgba(10,8,20,.6); display:none; align-items:flex-start; justify-content:center; padding:48px 16px; z-index:80; overflow:auto; }
+    .overlay.open { display:flex; }
+    .modal { background:var(--card); border:1px solid var(--border); border-radius:14px; width:520px; max-width:100%; padding:20px; }
+    .modal h2 { margin:0 0 10px; font-size:16px; }
+    .section { border:1px solid var(--border); border-radius:10px; padding:14px; }
+    .section h3 { margin:0 0 8px; font-size:13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">✦</div>
+    <div>
+      <h1>Polish</h1>
+      <p class="sub">Transform text with Claude — edit and refine in the canvas.</p>
+    </div>
+    <div class="spacer"></div>
+    <button id="openSettings" class="secondary">Settings</button>
+  </header>
+
+  <main>
+    <div class="card">
+      <div class="controls">
+        <div class="grow">
+          <label for="preset">Prompt</label>
+          <select id="preset"></select>
+        </div>
+        <div class="grow">
+          <label for="model">Claude model</label>
+          <select id="model"></select>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label for="prompt">Instruction sent to Claude (editable)</label>
+        <input type="text" id="prompt" value="Make this text better." />
+      </div>
+      <div class="controls" style="margin-top:14px; justify-content:flex-end;">
+        <span id="status" class="status" style="margin-right:auto;"></span>
+        <button id="go">Transform ✦</button>
+      </div>
+    </div>
+
+    <div id="work">
+      <div class="panel before">
+        <div class="head"><span>Before</span><span class="pill">your text</span></div>
+        <textarea id="before" class="editArea" placeholder="Paste or type the text you want to transform…"></textarea>
+      </div>
+
+      <div class="panel canvas" id="canvas">
+        <div class="head">
+          <span>Canvas — editable result</span>
+          <span class="actions">
+            <button id="copy" class="secondary tiny">Copy</button>
+            <button id="enlarge" class="icon" title="Enlarge">⛶</button>
+            <button id="closeCanvas" class="icon" title="Close">✕</button>
+          </span>
+        </div>
+        <div class="ftbar" id="ftbar">
+          <button data-cmd="bold" title="Bold"><b>B</b></button>
+          <button data-cmd="italic" title="Italic"><i>I</i></button>
+          <span class="sep"></span>
+          <button data-cmd="insertUnorderedList" title="Bullet list">• List</button>
+          <button data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+          <span class="sep"></span>
+          <button data-block="H3" title="Heading">H</button>
+          <button data-block="P" title="Normal text">¶</button>
+          <button data-cmd="removeFormat" title="Clear formatting">Clear</button>
+        </div>
+        <div id="after" class="editArea" contenteditable="true" data-placeholder="The transformed text appears here — edit it freely."></div>
+      </div>
+    </div>
+  </main>
+
+  <div id="backdrop"></div>
+
+  <!-- Settings -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2>Settings</h2>
+      <div class="section">
+        <h3>Claude API key</h3>
+        <div class="row">
+          <input type="password" id="apiKey" placeholder="sk-ant-…" disabled style="flex:1;" />
+          <button class="secondary" disabled>Save</button>
+        </div>
+        <p class="muted" style="margin:10px 0 0;">
+          In this browser preview the key is provided by the host, so this is turned off here.
+          In the <strong>Windows &amp; Mac apps</strong>, each user enters their own Claude API key in this spot.
+        </p>
+      </div>
+      <div class="row" style="justify-content:flex-end; margin-top:14px;">
+        <button id="closeSettings">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- floating rephrase bar for selections -->
+  <div class="selbar" id="selbar">
+    <input type="text" id="selInstruction" placeholder="How should this part read? (e.g. punchier)" />
+    <button id="selRephrase">Rephrase ✦</button>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const PRESETS = [
+      { name:'Improve writing (default)', text:'Make this text better.' },
+      { name:'Fix grammar & spelling only', text:'Fix only the grammar and spelling. Do not change the wording, tone, or meaning.' },
+      { name:'Make it more formal', text:'Rewrite this in a more formal, professional tone.' },
+      { name:'Make it friendlier', text:'Rewrite this in a warmer, friendlier tone.' },
+      { name:'Make it shorter', text:'Make this text shorter and more concise while keeping the key points.' },
+      { name:'Custom…', text:'' },
+    ];
+    const MODELS = [
+      { id:'claude-opus-4-8', label:'Claude Opus 4.8 — most capable' },
+      { id:'claude-sonnet-4-6', label:'Claude Sonnet 4.6 — balanced' },
+      { id:'claude-haiku-4-5', label:'Claude Haiku 4.5 — fastest' },
+    ];
+
+    PRESETS.forEach((p, i) => { const o=document.createElement('option'); o.value=i; o.textContent=p.name; $('preset').appendChild(o); });
+    MODELS.forEach((m) => { const o=document.createElement('option'); o.value=m.id; o.textContent=m.label; $('model').appendChild(o); });
+
+    $('preset').addEventListener('change', (e) => {
+      const p = PRESETS[e.target.value];
+      if (p.name.startsWith('Custom')) { $('prompt').value=''; $('prompt').focus(); }
+      else $('prompt').value = p.text;
+    });
+
+    function setStatus(msg, kind) { $('status').textContent = msg; $('status').className = 'status' + (kind ? ' ' + kind : ''); }
+
+    // settings modal (API key field is a placeholder in the browser preview)
+    $('openSettings').addEventListener('click', () => $('overlay').classList.add('open'));
+    $('closeSettings').addEventListener('click', () => $('overlay').classList.remove('open'));
+    $('overlay').addEventListener('click', (e) => { if (e.target === $('overlay')) $('overlay').classList.remove('open'); });
+
+    // shared call to the server
+    async function callTransform(text, promptText) {
+      const resp = await fetch('/transform', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ model: $('model').value, promptText, text }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || ('Error ' + resp.status));
+      return (data.result || '').trim();
+    }
+
+    // main transform -> opens canvas
+    $('go').addEventListener('click', async () => {
+      const text = $('before').value.trim();
+      const promptText = $('prompt').value.trim();
+      if (!text) { setStatus('Enter some text in the Before box first.', 'err'); return; }
+      if (!promptText) { setStatus('Enter an instruction.', 'err'); return; }
+      $('go').disabled = true;
+      setStatus('Transforming…');
+      try {
+        const result = await callTransform(text, promptText);
+        $('after').innerText = result;
+        $('work').classList.add('open');
+        setStatus('Done — edit or refine in the canvas.', 'ok');
+        $('after').focus();
+      } catch (err) {
+        setStatus(err.message, 'err');
+      } finally {
+        $('go').disabled = false;
+      }
+    });
+
+    // formatting toolbar (keep selection by preventing default on mousedown)
+    $('ftbar').addEventListener('mousedown', (e) => {
+      const btn = e.target.closest('button'); if (!btn) return;
+      e.preventDefault();
+      $('after').focus();
+      if (btn.dataset.cmd) document.execCommand(btn.dataset.cmd, false, null);
+      else if (btn.dataset.block) document.execCommand('formatBlock', false, btn.dataset.block);
+    });
+
+    $('copy').addEventListener('click', () => { const t = $('after').innerText; if (t) navigator.clipboard.writeText(t).catch(() => {}); });
+    $('closeCanvas').addEventListener('click', () => { $('work').classList.remove('open'); unEnlarge(); });
+
+    // enlarge
+    function unEnlarge() { $('canvas').classList.remove('enlarged'); $('backdrop').style.display='none'; $('enlarge').textContent='⛶'; }
+    $('enlarge').addEventListener('click', () => {
+      const on = $('canvas').classList.toggle('enlarged');
+      $('backdrop').style.display = on ? 'block' : 'none';
+      $('enlarge').textContent = on ? '🗗' : '⛶';
+    });
+    $('backdrop').addEventListener('click', unEnlarge);
+
+    // ---- select-to-rephrase ----
+    const selbar = $('selbar');
+    let savedRange = null;
+
+    function hideSelbar() { selbar.classList.remove('open'); }
+    function maybeShowSelbar() {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && !sel.isCollapsed && $('after').contains(sel.anchorNode) && sel.toString().trim()) {
+        savedRange = sel.getRangeAt(0).cloneRange();
+        const r = savedRange.getBoundingClientRect();
+        selbar.style.top = Math.max(8, r.top - 48) + 'px';
+        selbar.style.left = Math.min(window.innerWidth - 340, Math.max(8, r.left)) + 'px';
+        selbar.classList.add('open');
+      } else {
+        hideSelbar();
+      }
+    }
+    $('after').addEventListener('mouseup', () => setTimeout(maybeShowSelbar, 0));
+    $('after').addEventListener('keyup', () => setTimeout(maybeShowSelbar, 0));
+    document.addEventListener('mousedown', (e) => { if (!selbar.contains(e.target) && e.target !== $('after') && !$('after').contains(e.target)) hideSelbar(); });
+
+    $('selRephrase').addEventListener('click', async () => {
+      if (!savedRange) return;
+      const selected = savedRange.toString().trim();
+      if (!selected) return;
+      const instruction = $('selInstruction').value.trim() || 'Rephrase this more clearly while keeping the meaning.';
+      $('selRephrase').disabled = true;
+      try {
+        const result = await callTransform(selected, instruction);
+        savedRange.deleteContents();
+        savedRange.insertNode(document.createTextNode(result));
+        hideSelbar();
+        $('selInstruction').value = '';
+        setStatus('Rephrased the selected part.', 'ok');
+      } catch (err) {
+        setStatus(err.message, 'err');
+      } finally {
+        $('selRephrase').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
