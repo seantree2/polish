@@ -19,7 +19,7 @@ jobs:
         run: npm install
 
       - name: Build unsigned macOS .dmg (universal — Intel + Apple Silicon)
-        run: npm run generate-icons && npx --no-install electron-builder --mac --universal
+        run: npm run generate-icons && npx --no-install electron-builder --mac --universal --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
