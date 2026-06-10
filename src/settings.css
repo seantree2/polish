@@ -118,6 +118,9 @@ code {
   font-size: 12px;
 }
 
+.caption { font-size: 11px; color: var(--muted); margin: 0 0 4px; }
+.prompt .caption:nth-of-type(2) { margin-top: 8px; }
+
 .status { font-size: 12px; color: var(--muted); }
 .status.ok { color: var(--ok); }
 .status.err { color: var(--err); }

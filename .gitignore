@@ -1,5 +1,8 @@
 node_modules/
 dist/
+dist-mac/
+*.dmg
+*.exe
 build/icon.png
 assets/tray.png
 assets/trayTemplate.png

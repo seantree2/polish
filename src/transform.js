@@ -31,11 +31,11 @@ async function transformText({ apiKey, model, promptText, text }) {
   };
 
   // Opus 4.8 and Sonnet 4.6 support adaptive thinking + the effort control.
-  // For a fast, inline rewrite we disable thinking and run at low effort.
-  // Haiku 4.5 does not accept the effort parameter, so we send neither.
+  // We keep thinking off (snappier inline edits) but run at HIGH effort for
+  // stronger rewrites. Haiku 4.5 doesn't accept the effort parameter.
   if (model.startsWith('claude-opus') || model.startsWith('claude-sonnet')) {
     params.thinking = { type: 'disabled' };
-    params.output_config = { effort: 'low' };
+    params.output_config = { effort: 'high' };
   }
 
   const message = await client.messages.create(params);

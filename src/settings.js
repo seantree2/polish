@@ -47,7 +47,7 @@ function renderPrompts() {
     const name = document.createElement('input');
     name.type = 'text';
     name.value = p.name;
-    name.placeholder = 'Prompt name';
+    name.placeholder = 'Name (label only)';
     name.addEventListener('input', () => { p.name = name.value; });
 
     const activeLabel = document.createElement('label');
@@ -79,7 +79,16 @@ function renderPrompts() {
     text.placeholder = 'e.g. Make this text better.';
     text.addEventListener('input', () => { p.text = text.value; });
 
+    const nameCap = document.createElement('div');
+    nameCap.className = 'caption';
+    nameCap.textContent = 'Name — a label for you only (not sent to Claude)';
+    const textCap = document.createElement('div');
+    textCap.className = 'caption';
+    textCap.textContent = 'Instruction sent to Claude ↓ (this is what runs)';
+
+    card.appendChild(nameCap);
     card.appendChild(head);
+    card.appendChild(textCap);
     card.appendChild(text);
     wrap.appendChild(card);
   });
