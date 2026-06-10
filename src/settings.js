@@ -22,6 +22,17 @@ function prettyShortcut(accel) {
     .replace(/Option/gi, 'Alt');
 }
 
+// Mirror of the settings used in src/transform.js — keep in sync.
+function updateModelNote() {
+  const m = config.model || '';
+  const note = el('modelNote');
+  if (m.startsWith('claude-opus') || m.startsWith('claude-sonnet')) {
+    note.textContent = 'Active Claude settings for this model: adaptive thinking ON + high effort (strongest rewrites).';
+  } else {
+    note.textContent = 'Active Claude settings: standard mode (Haiku 4.5 does not support thinking or effort).';
+  }
+}
+
 function renderModels() {
   const sel = el('model');
   sel.innerHTML = '';
@@ -135,12 +146,13 @@ function startRecording() {
 async function load() {
   config = await window.polish.getConfig();
   renderModels();
+  updateModelNote();
   renderPrompts();
   el('shortcut').value = prettyShortcut(config.shortcut);
   setStatus(el('keyStatus'), config.hasApiKey ? 'A key is saved.' : 'No key saved yet.', config.hasApiKey ? 'ok' : 'err');
 }
 
-el('model').addEventListener('change', (e) => { config.model = e.target.value; });
+el('model').addEventListener('change', (e) => { config.model = e.target.value; updateModelNote(); });
 el('addPrompt').addEventListener('click', () => {
   config.prompts.push({ id: uid(), name: 'New prompt', text: '' });
   renderPrompts();
