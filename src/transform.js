@@ -14,8 +14,9 @@ const SYSTEM_PROMPT = [
 
 function estimateMaxTokens(text) {
   // Rough headroom: ~1 token per 3-4 chars, doubled, clamped.
+  // Higher floor leaves room for adaptive thinking + the rewrite on short text.
   const est = Math.ceil(text.length / 2);
-  return Math.min(16000, Math.max(1024, est));
+  return Math.min(16000, Math.max(4096, est));
 }
 
 async function transformText({ apiKey, model, promptText, text }) {
@@ -30,11 +31,11 @@ async function transformText({ apiKey, model, promptText, text }) {
     ],
   };
 
-  // Opus 4.8 and Sonnet 4.6 support adaptive thinking + the effort control.
-  // We keep thinking off (snappier inline edits) but run at HIGH effort for
-  // stronger rewrites. Haiku 4.5 doesn't accept the effort parameter.
+  // Opus 4.8 and Sonnet 4.6: adaptive thinking (Claude decides how much to
+  // think per request) + HIGH effort for the strongest rewrites.
+  // Haiku 4.5 doesn't accept the effort parameter, so we send neither.
   if (model.startsWith('claude-opus') || model.startsWith('claude-sonnet')) {
-    params.thinking = { type: 'disabled' };
+    params.thinking = { type: 'adaptive' };
     params.output_config = { effort: 'high' };
   }
 
