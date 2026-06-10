@@ -92,8 +92,11 @@ function ensureSpinner() {
 function showSpinner() {
   try {
     const w = ensureSpinner();
-    const pt = screen.getCursorScreenPoint();
-    w.setPosition(pt.x + 14, pt.y + 18);
+    // Center on whichever display the cursor is currently on.
+    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+    const b = display.bounds;
+    const [ww, wh] = w.getSize();
+    w.setPosition(Math.round(b.x + (b.width - ww) / 2), Math.round(b.y + (b.height - wh) / 2));
     w.showInactive(); // shows without stealing focus from the active app
   } catch {
     /* spinner is best-effort */
