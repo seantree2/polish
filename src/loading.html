@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #1a1822; color: #ececf1; border: 1px solid #2c2937;
+      border-radius: 20px; padding: 8px 13px; font-size: 12px; font-weight: 500;
+      box-shadow: 0 6px 22px rgba(0,0,0,.45); margin: 4px;
+    }
+    .spin {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #4a4660; border-top-color: #8b6ff0;
+      animation: r .7s linear infinite;
+    }
+    @keyframes r { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="pill"><div class="spin"></div><span>Polishing…</span></div>
+</body>
+</html>

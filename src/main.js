@@ -3,7 +3,7 @@
 // selection, sends it to Claude with the active prompt, and pastes the result
 // back in place.
 
-const { app, Tray, Menu, BrowserWindow, globalShortcut, clipboard, nativeImage, Notification, ipcMain, shell } = require('electron');
+const { app, Tray, Menu, BrowserWindow, globalShortcut, clipboard, nativeImage, Notification, ipcMain, shell, screen } = require('electron');
 const path = require('path');
 
 const store = require('./settingsStore');
@@ -64,6 +64,50 @@ async function getSelectedText() {
   return { selected, original };
 }
 
+// ---------- progress spinner (shown near the cursor while transforming) ----------
+let spinnerWin = null;
+
+function ensureSpinner() {
+  if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
+  spinnerWin = new BrowserWindow({
+    width: 150,
+    height: 48,
+    show: false,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    focusable: false,
+    skipTaskbar: true,
+    resizable: false,
+    movable: false,
+    hasShadow: false,
+    webPreferences: { contextIsolation: true },
+  });
+  spinnerWin.setAlwaysOnTop(true, 'screen-saver');
+  spinnerWin.setIgnoreMouseEvents(true);
+  spinnerWin.loadFile(path.join(__dirname, 'loading.html'));
+  return spinnerWin;
+}
+
+function showSpinner() {
+  try {
+    const w = ensureSpinner();
+    const pt = screen.getCursorScreenPoint();
+    w.setPosition(pt.x + 14, pt.y + 18);
+    w.showInactive(); // shows without stealing focus from the active app
+  } catch {
+    /* spinner is best-effort */
+  }
+}
+
+function hideSpinner() {
+  try {
+    if (spinnerWin && !spinnerWin.isDestroyed() && spinnerWin.isVisible()) spinnerWin.hide();
+  } catch {
+    /* ignore */
+  }
+}
+
 // ---------- the main action ----------
 async function runTransform() {
   if (busy) return;
@@ -84,7 +128,9 @@ async function runTransform() {
       return;
     }
 
+    showSpinner();
     const result = await callModel(cfg, selected);
+    hideSpinner();
 
     if (!result) {
       notify('No result', 'Claude returned an empty response.');
@@ -106,6 +152,7 @@ async function runTransform() {
   } catch (err) {
     notify('Transform failed', String((err && err.message) || err));
   } finally {
+    hideSpinner();
     busy = false;
     setTrayState(false);
   }
@@ -138,6 +185,7 @@ async function runTransformClipboard() {
   } catch (err) {
     notify('Transform failed', String((err && err.message) || err));
   } finally {
+    hideSpinner();
     busy = false;
     setTrayState(false);
   }
