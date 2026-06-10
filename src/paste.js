@@ -18,9 +18,12 @@ function sleep(ms) {
 const WIN_COPY =
   'powershell -NoProfile -WindowStyle Hidden -Command ' +
   '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^c\')"';
+// Ctrl+Shift+V = "paste without formatting" / paste-and-match-style in most
+// editors (Google Docs, Gmail, etc.) — the pasted text takes on the existing
+// text's formatting instead of resetting it to the document default.
 const WIN_PASTE =
   'powershell -NoProfile -WindowStyle Hidden -Command ' +
-  '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^v\')"';
+  '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^+v\')"';
 
 async function copySelection() {
   if (process.platform === 'darwin') {
@@ -34,11 +37,12 @@ async function copySelection() {
 
 async function pasteClipboard() {
   if (process.platform === 'darwin') {
-    await run(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
+    // Cmd+Shift+V = paste and match style (keeps the existing text's formatting).
+    await run(`osascript -e 'tell application "System Events" to keystroke "v" using {command down, shift down}'`);
   } else if (process.platform === 'win32') {
     await run(WIN_PASTE);
   } else {
-    await run('xdotool key --clearmodifiers ctrl+v');
+    await run('xdotool key --clearmodifiers ctrl+shift+v');
   }
 }
 
