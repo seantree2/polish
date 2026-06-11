@@ -84,6 +84,9 @@ function ensureSpinner() {
     webPreferences: { contextIsolation: true },
   });
   spinnerWin.setAlwaysOnTop(true, 'screen-saver');
+  // macOS: show over fullscreen apps / all Spaces (otherwise it's invisible
+  // whenever the user works in a fullscreen window).
+  spinnerWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreenSpaces: true });
   spinnerWin.setIgnoreMouseEvents(true);
   spinnerWin.loadFile(path.join(__dirname, 'loading.html'));
   return spinnerWin;
@@ -315,6 +318,10 @@ if (!gotLock) {
     tray.on('click', () => tray.popUpContextMenu());
 
     registerShortcut();
+
+    // Pre-create the spinner window (hidden) so its HTML is already rendered
+    // the first time it's shown — otherwise the first use can show blank.
+    ensureSpinner();
 
     // Auto-update: only in packaged builds. Checks GitHub Releases, downloads in
     // the background, and installs on quit. Fails quietly if there's no release
