@@ -330,8 +330,13 @@ if (!gotLock) {
       }
     }
 
-    if (store.isFirstRun() || !store.hasApiKey()) openSettings();
+    // Always show the Settings window on launch so users can see the app is
+    // running (it keeps living in the tray/menu bar after the window closes).
+    openSettings();
   });
+
+  // macOS: re-opening the app (Finder/Dock) while it's running shows Settings.
+  app.on('activate', openSettings);
 
   // Tray app: don't quit when the settings window closes.
   app.on('window-all-closed', (e) => {
