@@ -1,0 +1,71 @@
+# Automated release pipeline: builds Windows + macOS, SIGNS + NOTARIZES the Mac
+# app, and PUBLISHES both to GitHub Releases (which is what auto-update reads).
+#
+# Trigger: push a version tag (e.g. v1.0.1) or run manually from the Actions tab.
+#
+# REQUIRES these repo secrets (Settings > Secrets and variables > Actions).
+# Until they're added, this workflow will fail on the Mac job — that's expected.
+#   APPLE_ID                    Apple ID email of the Developer account
+#   APPLE_APP_SPECIFIC_PASSWORD app-specific password (appleid.apple.com)
+#   APPLE_TEAM_ID               10-char Team ID (developer.apple.com > Membership)
+#   MAC_CERT_P12_BASE64         the "Developer ID Application" cert exported as .p12,
+#                               then base64-encoded:  base64 -i cert.p12 | pbcopy
+#   MAC_CERT_PASSWORD           the password set when exporting the .p12
+#   KEYCHAIN_PASSWORD           any throwaway password for the temp CI keychain
+#
+# See RELEASE-SETUP.md for the full walkthrough.
+
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # needed to create the GitHub Release
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - name: Build + publish Windows installer
+        run: npm run generate-icons && npx --no-install electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+
+      - name: Import Developer ID certificate
+        env:
+          MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          echo "$MAC_CERT_P12_BASE64" | base64 --decode > cert.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" build.keychain
+          security import cert.p12 -k build.keychain -P "$MAC_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
+          rm cert.p12
+
+      - name: Build + sign + notarize + publish macOS app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run generate-icons && npx --no-install electron-builder --mac --universal --publish always

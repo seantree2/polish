@@ -19,7 +19,7 @@ jobs:
         run: npm install
 
       - name: Build app (universal, unpacked)
-        run: npm run generate-icons && npx --no-install electron-builder --mac --universal --dir --publish never
+        run: npm run generate-icons && npx --no-install electron-builder --mac --universal --dir -c.mac.notarize=false --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 
@@ -29,7 +29,7 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "dist/mac-universal/Polish.app"
 
       - name: Package the .dmg from the signed app
-        run: npx --no-install electron-builder --mac dmg --prepackaged "dist/mac-universal/Polish.app" --publish never
+        run: npx --no-install electron-builder --mac dmg --prepackaged "dist/mac-universal/Polish.app" -c.mac.notarize=false --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
 

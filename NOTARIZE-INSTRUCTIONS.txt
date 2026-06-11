@@ -1,0 +1,54 @@
+NOTARIZE POLISH FOR MAC  —  instructions for the teammate with the Apple Developer account
+============================================================================================
+
+Goal: produce a Polish .dmg that opens on ANY Mac with a normal double-click
+(no Terminal, no "Open Anyway", no Accessibility-permission weirdness on update).
+This must be done ON A MAC.
+
+WHAT YOU NEED
+-------------
+- A Mac.
+- Node.js  (https://nodejs.org  — click the "LTS" button, install it).
+- Your Apple "Developer ID Application" certificate in your login keychain:
+    Xcode > Settings > Accounts > (your team) > Manage Certificates > "+" >
+    "Developer ID Application".
+    (Or download it from developer.apple.com > Certificates.)
+- Notarization credentials:
+    * APPLE_ID                    = the Apple ID email of the Developer account
+    * APPLE_APP_SPECIFIC_PASSWORD = an app-specific password
+        (appleid.apple.com > Sign-In & Security > App-Specific Passwords > "+")
+    * APPLE_TEAM_ID               = your 10-character Team ID
+        (developer.apple.com > Membership details)
+
+STEPS
+-----
+1. Unzip this folder. Open Terminal and cd into it.
+
+2. Install dependencies:
+       npm install
+
+3. Provide your credentials (paste, using your real values):
+       export APPLE_ID="you@example.com"
+       export APPLE_APP_SPECIFIC_PASSWORD="abcd-efgh-ijkl-mnop"
+       export APPLE_TEAM_ID="ABCDE12345"
+
+4. Build + sign + notarize (one command):
+       npm run dist:mac
+   This signs with your Developer ID cert, submits to Apple to notarize, and
+   staples the ticket. The first notarization can take a few minutes.
+
+5. The finished installer is in the new "dist" folder:
+       dist/Polish-1.0.0-universal.dmg   (or a similar name)
+   Send that .dmg back to Sean. It will open with a plain double-click on any Mac.
+
+NOTES
+-----
+- Nothing to edit: package.json is already set up for signing + notarization
+  (hardenedRuntime, entitlements at build/entitlements.mac.plist, notarize: true).
+  Just provide the three credentials above.
+- electron-builder auto-detects your "Developer ID Application" cert from the keychain.
+- If it says "no identity found": confirm the cert is "Developer ID Application"
+  (NOT "Apple Development" / "Mac Developer") and that you're on the correct team.
+- It's a universal build (works on both Intel and Apple Silicon Macs).
+- This is a small Electron app; the only dependency that talks out is the Claude
+  API (the user enters their own API key inside the app at runtime).

@@ -316,6 +316,20 @@ if (!gotLock) {
 
     registerShortcut();
 
+    // Auto-update: only in packaged builds. Checks GitHub Releases, downloads in
+    // the background, and installs on quit. Fails quietly if there's no release
+    // or no network. (On macOS this requires signed + notarized builds to apply.)
+    if (app.isPackaged) {
+      try {
+        const { autoUpdater } = require('electron-updater');
+        autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+        // Re-check every 6 hours while running.
+        setInterval(() => autoUpdater.checkForUpdatesAndNotify().catch(() => {}), 6 * 60 * 60 * 1000);
+      } catch {
+        /* updater unavailable — ignore */
+      }
+    }
+
     if (store.isFirstRun() || !store.hasApiKey()) openSettings();
   });
 
