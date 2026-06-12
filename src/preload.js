@@ -9,4 +9,6 @@ contextBridge.exposeInMainWorld('polish', {
   setApiKey: (key) => ipcRenderer.invoke('set-api-key', key),
   testConnection: () => ipcRenderer.invoke('test-connection'),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  permStatus: () => ipcRenderer.invoke('perm-status'),
+  openAccessibilitySettings: () => ipcRenderer.invoke('open-accessibility-settings'),
 });

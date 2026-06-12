@@ -142,6 +142,22 @@ function startRecording() {
   setTimeout(() => { if (input.value === 'Press keys…') input.value = prev; }, 6000);
 }
 
+// ---- macOS permission health ----
+async function refreshPermStatus() {
+  const status = await window.polish.permStatus();
+  const section = el('permSection');
+  if (!status) { section.style.display = 'none'; return; } // not macOS
+  section.style.display = '';
+  if (status.accessibility) {
+    setStatus(el('permStatus'), '✓ Accessibility is granted — Polish can edit text in other apps.', 'ok');
+  } else {
+    setStatus(el('permStatus'), '✗ Accessibility is NOT granted yet — the shortcut will not work until Polish is enabled.', 'err');
+  }
+}
+
+el('openPerm').addEventListener('click', () => window.polish.openAccessibilitySettings());
+el('recheckPerm').addEventListener('click', refreshPermStatus);
+
 // ---- wiring ----
 async function load() {
   config = await window.polish.getConfig();
@@ -150,6 +166,7 @@ async function load() {
   renderPrompts();
   el('shortcut').value = prettyShortcut(config.shortcut);
   setStatus(el('keyStatus'), config.hasApiKey ? 'A key is saved.' : 'No key saved yet.', config.hasApiKey ? 'ok' : 'err');
+  await refreshPermStatus();
 }
 
 el('model').addEventListener('change', (e) => { config.model = e.target.value; updateModelNote(); });

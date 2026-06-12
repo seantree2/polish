@@ -3,7 +3,7 @@
 // selection, sends it to Claude with the active prompt, and pastes the result
 // back in place.
 
-const { app, Tray, Menu, BrowserWindow, globalShortcut, clipboard, nativeImage, Notification, ipcMain, shell, screen } = require('electron');
+const { app, Tray, Menu, BrowserWindow, globalShortcut, clipboard, nativeImage, Notification, ipcMain, shell, screen, dialog, systemPreferences } = require('electron');
 const path = require('path');
 
 const store = require('./settingsStore');
@@ -300,6 +300,16 @@ function registerIpc() {
   });
 
   ipcMain.handle('open-external', (_e, url) => shell.openExternal(url));
+
+  // macOS setup health: is Accessibility actually granted? (null elsewhere)
+  ipcMain.handle('perm-status', () => {
+    if (process.platform !== 'darwin') return null;
+    return { accessibility: systemPreferences.isTrustedAccessibilityClient(false) };
+  });
+
+  ipcMain.handle('open-accessibility-settings', () =>
+    shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility')
+  );
 }
 
 // ---------- app lifecycle ----------
@@ -311,6 +321,32 @@ if (!gotLock) {
 
   app.whenReady().then(() => {
     if (process.platform === 'darwin' && app.dock) app.dock.hide();
+
+    // macOS: if launched from the mounted .dmg or Downloads, offer to install
+    // ourselves into /Applications and relaunch from there. Kills the classic
+    // "ran it from the disk image" problem without the user following steps.
+    if (process.platform === 'darwin' && app.isPackaged && !app.isInApplicationsFolder()) {
+      const fromDmg = process.execPath.startsWith('/Volumes/');
+      const choice = dialog.showMessageBoxSync({
+        type: 'question',
+        buttons: ['Move to Applications', 'Not Now'],
+        defaultId: 0,
+        cancelId: 1,
+        message: 'Install Polish in your Applications folder?',
+        detail: fromDmg
+          ? 'Polish is running from the disk image, so it would disappear after you eject it. Click "Move to Applications" to install it properly.'
+          : 'Polish runs best from the Applications folder. Click "Move to Applications" to install it properly.',
+      });
+      if (choice === 0) {
+        try {
+          // Returns/relaunches from the new location on success.
+          app.moveToApplicationsFolder({ conflictHandler: () => true });
+          return; // the moved copy takes over
+        } catch {
+          /* fall through and keep running from here */
+        }
+      }
+    }
 
     registerIpc();
     tray = new Tray(trayImage());
