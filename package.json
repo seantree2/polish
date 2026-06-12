@@ -28,6 +28,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
+      "artifactName": "${productName}-V${version}-${arch}.${ext}",
       "target": [
         "dmg"
       ],
@@ -41,6 +42,9 @@
       "target": [
         "nsis"
       ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-V${version}.${ext}"
     },
     "publish": [
       {
