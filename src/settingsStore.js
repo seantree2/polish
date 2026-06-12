@@ -9,7 +9,7 @@ const path = require('path');
 const DEFAULTS = {
   // CommandOrControl => Cmd on macOS, Ctrl on Windows/Linux.
   shortcut: 'CommandOrControl+L',
-  model: 'claude-opus-4-8',
+  model: 'claude-fable-5',
   prompts: [
     { id: 'default', name: 'Improve writing', text: 'Make this text better.' },
   ],

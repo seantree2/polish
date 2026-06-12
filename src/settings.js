@@ -26,7 +26,7 @@ function prettyShortcut(accel) {
 function updateModelNote() {
   const m = config.model || '';
   const note = el('modelNote');
-  if (m.startsWith('claude-opus') || m.startsWith('claude-sonnet')) {
+  if (m.startsWith('claude-fable') || m.startsWith('claude-opus') || m.startsWith('claude-sonnet')) {
     note.textContent = 'Active Claude settings for this model: adaptive thinking ON + high effort (strongest rewrites).';
   } else {
     note.textContent = 'Active Claude settings: standard mode (Haiku 4.5 does not support thinking or effort).';

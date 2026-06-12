@@ -32,10 +32,11 @@ async function transformText({ apiKey, model, promptText, text }) {
     ],
   };
 
-  // Opus 4.8 and Sonnet 4.6: adaptive thinking (Claude decides how much to
-  // think per request) + HIGH effort for the strongest rewrites.
+  // Fable 5, Opus 4.8, and Sonnet 4.6: adaptive thinking (Claude decides how
+  // much to think per request) + HIGH effort for the strongest rewrites.
+  // (Verified via the Models API: all three support adaptive + effort.)
   // Haiku 4.5 doesn't accept the effort parameter, so we send neither.
-  if (model.startsWith('claude-opus') || model.startsWith('claude-sonnet')) {
+  if (model.startsWith('claude-fable') || model.startsWith('claude-opus') || model.startsWith('claude-sonnet')) {
     params.thinking = { type: 'adaptive' };
     params.output_config = { effort: 'high' };
   }
