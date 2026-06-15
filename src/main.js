@@ -309,6 +309,14 @@ function registerIpc() {
   ipcMain.handle('open-accessibility-settings', () =>
     shell.openExternal('x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility')
   );
+
+  // macOS caches the Accessibility-trust answer for a process's whole lifetime,
+  // so a grant made *after* launch isn't seen until Polish restarts. This lets
+  // the Settings window relaunch the app to pick up a just-enabled permission.
+  ipcMain.handle('relaunch-app', () => {
+    app.relaunch();
+    app.exit(0);
+  });
 }
 
 // ---------- macOS: offer to install into /Applications ----------

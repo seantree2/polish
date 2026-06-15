@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld('polish', {
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   permStatus: () => ipcRenderer.invoke('perm-status'),
   openAccessibilitySettings: () => ipcRenderer.invoke('open-accessibility-settings'),
+  relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
 });

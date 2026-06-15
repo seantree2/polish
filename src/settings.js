@@ -150,13 +150,18 @@ async function refreshPermStatus() {
   section.style.display = '';
   if (status.accessibility) {
     setStatus(el('permStatus'), '✓ Accessibility is granted — Polish can edit text in other apps.', 'ok');
+    el('restartPerm').style.display = 'none';
+    el('permTip').style.display = 'none';
   } else {
     setStatus(el('permStatus'), '✗ Accessibility is NOT granted yet — the shortcut will not work until Polish is enabled.', 'err');
+    // macOS only re-reads the grant on restart, so offer that explicitly.
+    el('restartPerm').style.display = '';
+    el('permTip').style.display = '';
   }
 }
 
 el('openPerm').addEventListener('click', () => window.polish.openAccessibilitySettings());
-el('recheckPerm').addEventListener('click', refreshPermStatus);
+el('restartPerm').addEventListener('click', () => window.polish.relaunchApp());
 
 // ---- wiring ----
 async function load() {
