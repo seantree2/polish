@@ -9,12 +9,21 @@ const path = require('path');
 const DEFAULTS = {
   // CommandOrControl => Cmd on macOS, Ctrl on Windows/Linux.
   shortcut: 'CommandOrControl+L',
-  model: 'claude-fable-5',
+  model: 'claude-opus-4-8',
   prompts: [
     { id: 'default', name: 'Improve writing', text: 'Make this text better.' },
   ],
   activePromptId: 'default',
 };
+
+// Models that have been retired/suspended. Anyone whose saved config still
+// points at one is transparently moved to the recommended replacement, so the
+// app never tries to call a model the API will 404 on.
+const RETIRED_MODELS = { 'claude-fable-5': 'claude-opus-4-8' };
+
+function normalizeModel(model) {
+  return RETIRED_MODELS[model] || model || DEFAULTS.model;
+}
 
 function configPath() {
   return path.join(app.getPath('userData'), 'config.json');
@@ -36,7 +45,7 @@ function getConfig() {
   const raw = readRaw();
   return {
     shortcut: raw.shortcut || DEFAULTS.shortcut,
-    model: raw.model || DEFAULTS.model,
+    model: normalizeModel(raw.model),
     prompts: Array.isArray(raw.prompts) && raw.prompts.length ? raw.prompts : DEFAULTS.prompts,
     activePromptId: raw.activePromptId || DEFAULTS.activePromptId,
   };
@@ -57,6 +66,7 @@ function saveConfig(partial) {
   for (const key of ['shortcut', 'model', 'prompts', 'activePromptId']) {
     if (partial[key] !== undefined) next[key] = partial[key];
   }
+  if (next.model !== undefined) next.model = normalizeModel(next.model);
   writeRaw(next);
   return getConfig();
 }

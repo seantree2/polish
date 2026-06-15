@@ -13,8 +13,7 @@ const { copySelection, pasteClipboard, sleep } = require('./paste');
 const ASSETS = path.join(__dirname, '..', 'assets');
 
 const MODELS = [
-  { id: 'claude-fable-5', label: 'Claude Fable 5 — newest, most capable' },
-  { id: 'claude-opus-4-8', label: 'Claude Opus 4.8' },
+  { id: 'claude-opus-4-8', label: 'Claude Opus 4.8 — most capable' },
   { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 — balanced' },
   { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — fastest' },
 ];
@@ -312,6 +311,43 @@ function registerIpc() {
   );
 }
 
+// ---------- macOS: offer to install into /Applications ----------
+// Non-blocking and tied to the Settings window, so it can never stall startup
+// (the V6 version showed this synchronously at launch, where a dock-hidden app
+// could render the dialog behind other windows and freeze before the tray
+// appeared — making the app look like it wouldn't open).
+function maybeOfferMoveToApplications() {
+  if (process.platform !== 'darwin' || !app.isPackaged) return;
+  try {
+    if (app.isInApplicationsFolder()) return;
+  } catch {
+    return;
+  }
+  const fromDmg = process.execPath.startsWith('/Volumes/');
+  const parent = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : undefined;
+  dialog
+    .showMessageBox(parent, {
+      type: 'question',
+      buttons: ['Move to Applications', 'Not Now'],
+      defaultId: 0,
+      cancelId: 1,
+      message: 'Install Polish in your Applications folder?',
+      detail: fromDmg
+        ? 'Polish is running from the disk image, so it would disappear after you eject it. Click "Move to Applications" to install it properly.'
+        : 'Polish runs best from the Applications folder. Click "Move to Applications" to install it properly.',
+    })
+    .then(({ response }) => {
+      if (response !== 0) return;
+      try {
+        // On success this relaunches from /Applications and quits this copy.
+        app.moveToApplicationsFolder({ conflictHandler: () => true });
+      } catch {
+        /* leave it running from here if the move fails */
+      }
+    })
+    .catch(() => {});
+}
+
 // ---------- app lifecycle ----------
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
@@ -321,32 +357,6 @@ if (!gotLock) {
 
   app.whenReady().then(() => {
     if (process.platform === 'darwin' && app.dock) app.dock.hide();
-
-    // macOS: if launched from the mounted .dmg or Downloads, offer to install
-    // ourselves into /Applications and relaunch from there. Kills the classic
-    // "ran it from the disk image" problem without the user following steps.
-    if (process.platform === 'darwin' && app.isPackaged && !app.isInApplicationsFolder()) {
-      const fromDmg = process.execPath.startsWith('/Volumes/');
-      const choice = dialog.showMessageBoxSync({
-        type: 'question',
-        buttons: ['Move to Applications', 'Not Now'],
-        defaultId: 0,
-        cancelId: 1,
-        message: 'Install Polish in your Applications folder?',
-        detail: fromDmg
-          ? 'Polish is running from the disk image, so it would disappear after you eject it. Click "Move to Applications" to install it properly.'
-          : 'Polish runs best from the Applications folder. Click "Move to Applications" to install it properly.',
-      });
-      if (choice === 0) {
-        try {
-          // Returns/relaunches from the new location on success.
-          app.moveToApplicationsFolder({ conflictHandler: () => true });
-          return; // the moved copy takes over
-        } catch {
-          /* fall through and keep running from here */
-        }
-      }
-    }
 
     registerIpc();
     tray = new Tray(trayImage());
@@ -377,6 +387,11 @@ if (!gotLock) {
     // Always show the Settings window on launch so users can see the app is
     // running (it keeps living in the tray/menu bar after the window closes).
     openSettings();
+
+    // Offer to install into /Applications — AFTER startup is fully done, and
+    // non-blocking, so a missed/hidden prompt can never stall launch (the app
+    // is already live in the tray + Settings window before this runs).
+    maybeOfferMoveToApplications();
   });
 
   // macOS: re-opening the app (Finder/Dock) while it's running shows Settings.
