@@ -70,18 +70,26 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 150,
-    height: 48,
+    width: 200,
+    height: 170,
     show: false,
     frame: false,
-    transparent: true,
+    // Opaque (NOT transparent) with a solid backgroundColor: an opaque window
+    // composites reliably on macOS, which sidesteps the transparent-window
+    // "reveals blank / nothing appears" bug entirely. Rounded corners + shadow
+    // keep it looking like a floating card.
+    transparent: false,
+    backgroundColor: '#1a1822',
+    roundedCorners: true,
     alwaysOnTop: true,
     focusable: false,
     skipTaskbar: true,
     resizable: false,
     movable: false,
-    hasShadow: false,
-    webPreferences: { contextIsolation: true },
+    hasShadow: true,
+    // backgroundThrottling off keeps the hidden renderer painting so the first
+    // reveal is never an unpainted frame.
+    webPreferences: { contextIsolation: true, backgroundThrottling: false },
   });
   spinnerWin.setAlwaysOnTop(true, 'screen-saver');
   // macOS: show over fullscreen apps / all Spaces (otherwise it's invisible
@@ -101,6 +109,11 @@ function showSpinner() {
     const [ww, wh] = w.getSize();
     w.setPosition(Math.round(b.x + (b.width - ww) / 2), Math.round(b.y + (b.height - wh) / 2));
     w.showInactive(); // shows without stealing focus from the active app
+    // Re-assert top-most and force to the front of the z-order. A transparent
+    // always-on-top window on macOS can otherwise report visible while actually
+    // compositing behind the active app — which looks like "no spinner at all".
+    w.setAlwaysOnTop(true, 'screen-saver');
+    try { w.moveTop(); } catch { /* not available on every platform */ }
   } catch {
     /* spinner is best-effort */
   }
@@ -128,15 +141,19 @@ async function runTransform() {
   busy = true;
   setTrayState(true);
   try {
+    // Immediate feedback the moment the shortcut fires — shown BEFORE the copy
+    // step and kept up through the whole copy -> Claude -> paste flow. The
+    // hideSpinner() in `finally` guarantees it's always removed afterward,
+    // whether we finish, find nothing selected, or hit an error.
+    showSpinner();
+
     const { selected, original } = await getSelectedText();
     if (!selected || !selected.trim()) {
       notify('Nothing selected', 'Select some text first, then press the shortcut.');
       return;
     }
 
-    showSpinner();
     const result = await callModel(cfg, selected);
-    hideSpinner();
 
     if (!result) {
       notify('No result', 'Claude returned an empty response.');
