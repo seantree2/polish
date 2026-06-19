@@ -70,16 +70,13 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 320,
-    height: 110,
+    width: 300,
+    height: 100,
     show: false,
     frame: false,
-    // Transparent so ONLY the ring shows (no card / background). The near-zero
-    // alpha backgroundColor (#00000001) is visually nothing, but it gives macOS's
-    // compositor a backing layer — the known workaround that makes transparent
-    // windows far more likely to actually paint instead of revealing blank.
+    // Fully transparent — only the opaque purple pill is drawn, nothing else
+    // (no backing rectangle around it). The pill is opaque so it composites fine.
     transparent: true,
-    backgroundColor: '#00000001',
     alwaysOnTop: true,
     focusable: false,
     skipTaskbar: true,
@@ -102,15 +99,12 @@ function ensureSpinner() {
 function showSpinner() {
   try {
     const w = ensureSpinner();
-    // Position the pill just below the mouse cursor (so it lands next to the text
-    // being polished), clamped to the screen's work area so it never runs off-edge.
-    const cursor = screen.getCursorScreenPoint();
-    const wa = screen.getDisplayNearestPoint(cursor).workArea;
+    // Position the pill at the bottom-center of whichever screen the cursor is on.
+    // workArea excludes the Dock/menu bar, so it floats just above the Dock.
+    const wa = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
     const [ww, wh] = w.getSize();
-    let x = Math.round(cursor.x - ww / 2); // horizontally centered on the cursor
-    let y = Math.round(cursor.y + 10);     // just below the cursor
-    x = Math.max(wa.x + 8, Math.min(x, wa.x + wa.width - ww - 8));
-    y = Math.max(wa.y + 8, Math.min(y, wa.y + wa.height - wh - 8));
+    const x = Math.round(wa.x + (wa.width - ww) / 2);
+    const y = Math.round(wa.y + wa.height - wh - 40); // ~40px above the bottom edge
     w.setPosition(x, y);
     w.showInactive(); // shows without stealing focus from the active app
     // Re-assert top-most and force to the front of the z-order. A transparent
