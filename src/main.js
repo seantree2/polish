@@ -31,7 +31,15 @@ async function callModel(cfg, text) {
   const prompt = activePrompt(cfg);
   const apiKey = store.getApiKey();
   if (!apiKey) throw new Error('No API key saved. Open Settings and add your Claude API key.');
-  return transformText({ apiKey, model: cfg.model, promptText: prompt.text, text });
+  // Hard cap: abort a hung/slow request after 75s so it can never leave the app
+  // stuck "busy" (which previously made the shortcut stop working until restart).
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(new Error('Polish timed out — please try again')), 75000);
+  try {
+    return await transformText({ apiKey, model: cfg.model, promptText: prompt.text, text, signal: ac.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // ---------- notifications ----------

@@ -20,8 +20,8 @@ function estimateMaxTokens(text) {
   return Math.min(16000, Math.max(4096, est));
 }
 
-async function transformText({ apiKey, model, promptText, text }) {
-  const client = new Anthropic({ apiKey });
+async function transformText({ apiKey, model, promptText, text, signal }) {
+  const client = new Anthropic({ apiKey, timeout: 90000 });
 
   const params = {
     model,
@@ -41,7 +41,7 @@ async function transformText({ apiKey, model, promptText, text }) {
     params.output_config = { effort: 'high' };
   }
 
-  const message = await client.messages.create(params);
+  const message = await client.messages.create(params, signal ? { signal } : {});
   return message.content
     .filter((block) => block.type === 'text')
     .map((block) => block.text)

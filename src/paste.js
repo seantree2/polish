@@ -7,7 +7,9 @@ const { exec } = require('child_process');
 
 function run(cmd) {
   return new Promise((resolve, reject) => {
-    exec(cmd, { windowsHide: true }, (err) => (err ? reject(err) : resolve()));
+    // timeout: kill a hung keystroke command (e.g. osascript blocked on a
+    // permission prompt) so it can never wedge the transform.
+    exec(cmd, { windowsHide: true, timeout: 5000 }, (err) => (err ? reject(err) : resolve()));
   });
 }
 
