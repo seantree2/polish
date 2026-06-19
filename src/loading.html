@@ -4,27 +4,23 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
   <style>
+    /* Transparent page — only the ring is drawn, floating on whatever is behind it. */
     html, body {
-      margin: 0; height: 100%; overflow: hidden;
-      background: #1a1822; color: #ececf1;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0; height: 100%; overflow: hidden; background: transparent;
+      display: flex; align-items: center; justify-content: center;
     }
-    /* Center the spinner + label in the whole window (window is centered on screen). */
-    body { display: flex; align-items: center; justify-content: center; }
-    .card { display: flex; flex-direction: column; align-items: center; gap: 16px; }
     .spin {
-      width: 48px; height: 48px; border-radius: 50%;
-      border: 4px solid #3a3650; border-top-color: #8b6ff0;
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 6px solid rgba(138, 111, 240, 0.25); /* faint purple track — reads on any backdrop */
+      border-top-color: #8b6ff0;                    /* solid purple arc */
       animation: r .7s linear infinite;
+      /* Drop shadow so the ring stays visible over light AND dark apps. */
+      filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .5));
     }
-    .label { font-size: 15px; font-weight: 500; letter-spacing: .2px; }
     @keyframes r { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="spin"></div>
-    <div class="label">Polishing…</div>
-  </div>
+  <div class="spin"></div>
 </body>
 </html>

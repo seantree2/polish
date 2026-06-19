@@ -70,23 +70,22 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 200,
-    height: 170,
+    width: 120,
+    height: 120,
     show: false,
     frame: false,
-    // Opaque (NOT transparent) with a solid backgroundColor: an opaque window
-    // composites reliably on macOS, which sidesteps the transparent-window
-    // "reveals blank / nothing appears" bug entirely. Rounded corners + shadow
-    // keep it looking like a floating card.
-    transparent: false,
-    backgroundColor: '#1a1822',
-    roundedCorners: true,
+    // Transparent so ONLY the ring shows (no card / background). The near-zero
+    // alpha backgroundColor (#00000001) is visually nothing, but it gives macOS's
+    // compositor a backing layer — the known workaround that makes transparent
+    // windows far more likely to actually paint instead of revealing blank.
+    transparent: true,
+    backgroundColor: '#00000001',
     alwaysOnTop: true,
     focusable: false,
     skipTaskbar: true,
     resizable: false,
     movable: false,
-    hasShadow: true,
+    hasShadow: false,
     // backgroundThrottling off keeps the hidden renderer painting so the first
     // reveal is never an unpainted frame.
     webPreferences: { contextIsolation: true, backgroundThrottling: false },
