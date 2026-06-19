@@ -10,15 +10,13 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     .pill {
-      display: inline-flex; align-items: center; gap: 12px;
-      padding: 10px 26px; border-radius: 999px; /* shorter capsule */
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 17px; border-radius: 999px; /* 35% smaller than before */
       background: linear-gradient(160deg, #9179f4 0%, #7a5cee 100%);
-      box-shadow: 0 10px 26px rgba(120, 90, 235, .45), inset 0 1px 0 rgba(255, 255, 255, .30);
-      color: #fff; white-space: nowrap;
+      color: #fff; white-space: nowrap; /* no box-shadow at all — no glow */
     }
-    .label { font-size: 19px; font-weight: 700; letter-spacing: .2px; }
-    /* the sparkle on the right spins while polishing */
-    .spark { width: 22px; height: 22px; flex: none; transform-origin: 50% 50%; animation: spin 1.1s linear infinite; }
+    .label { font-size: 12px; font-weight: 700; letter-spacing: .2px; }
+    .spark { width: 14px; height: 14px; flex: none; transform-origin: 50% 50%; animation: spin 1.1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>

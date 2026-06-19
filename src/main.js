@@ -70,13 +70,17 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 300,
-    height: 100,
+    width: 130,
+    height: 34,
     show: false,
     frame: false,
-    // Fully transparent — only the opaque purple pill is drawn, nothing else
-    // (no backing rectangle around it). The pill is opaque so it composites fine.
+    // Transparent window sized to hug the pill. The ~0.4%-alpha backgroundColor
+    // (#00000001) is the macOS workaround that lets the transparent window actually
+    // composite over GPU/browser apps (Google Docs, Claude Code). Because the window
+    // hugs the pill, that backing only fills the rounded-corner slivers — invisible,
+    // so there's no rectangle around the capsule.
     transparent: true,
+    backgroundColor: '#00000001',
     alwaysOnTop: true,
     focusable: false,
     skipTaskbar: true,
@@ -99,12 +103,11 @@ function ensureSpinner() {
 function showSpinner() {
   try {
     const w = ensureSpinner();
-    // Position the pill at the bottom-center of whichever screen the cursor is on.
-    // workArea excludes the Dock/menu bar, so it floats just above the Dock.
-    const wa = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+    // Center the pill on whichever screen the cursor is currently on.
+    const b = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
     const [ww, wh] = w.getSize();
-    const x = Math.round(wa.x + (wa.width - ww) / 2);
-    const y = Math.round(wa.y + wa.height - wh - 40); // ~40px above the bottom edge
+    const x = Math.round(b.x + (b.width - ww) / 2);
+    const y = Math.round(b.y + (b.height - wh) / 2);
     w.setPosition(x, y);
     w.showInactive(); // shows without stealing focus from the active app
     // Re-assert top-most and force to the front of the z-order. A transparent
