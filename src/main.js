@@ -70,8 +70,8 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 120,
-    height: 120,
+    width: 180,
+    height: 150,
     show: false,
     frame: false,
     // Transparent so ONLY the ring shows (no card / background). The near-zero
