@@ -4,21 +4,30 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
   <style>
-    /* Transparent page — only the purple ring is drawn, nothing else. */
     html, body {
       margin: 0; height: 100%; overflow: hidden; background: transparent;
       display: flex; align-items: center; justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    .spin {
-      width: 56px; height: 56px; border-radius: 50%;
-      border: 5px solid rgba(138, 111, 240, 0.30); /* faint purple track */
-      border-top-color: #8b6ff0;                    /* solid purple arc */
-      animation: r .7s linear infinite;
+    .pill {
+      display: inline-flex; align-items: center; gap: 14px;
+      padding: 14px 28px; border-radius: 999px;
+      background: linear-gradient(160deg, #9179f4 0%, #7a5cee 100%);
+      box-shadow: 0 12px 30px rgba(120, 90, 235, .45), inset 0 1px 0 rgba(255, 255, 255, .30);
+      color: #fff; white-space: nowrap;
     }
-    @keyframes r { to { transform: rotate(360deg); } }
+    .label { font-size: 22px; font-weight: 700; letter-spacing: .2px; }
+    /* the sparkle on the right spins while polishing */
+    .spark { width: 26px; height: 26px; flex: none; transform-origin: 50% 50%; animation: spin 1.1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
-  <div class="spin"></div>
+  <div class="pill">
+    <span class="label">Polishing…</span>
+    <svg class="spark" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 1 C12.9 8.2, 15.8 11.1, 23 12 C15.8 12.9, 12.9 15.8, 12 23 C11.1 15.8, 8.2 12.9, 1 12 C8.2 11.1, 11.1 8.2, 12 1 Z" fill="#ffffff"/>
+    </svg>
+  </div>
 </body>
 </html>

@@ -70,8 +70,8 @@ let spinnerWin = null;
 function ensureSpinner() {
   if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
   spinnerWin = new BrowserWindow({
-    width: 120,
-    height: 120,
+    width: 320,
+    height: 110,
     show: false,
     frame: false,
     // Transparent so ONLY the ring shows (no card / background). The near-zero
@@ -102,11 +102,16 @@ function ensureSpinner() {
 function showSpinner() {
   try {
     const w = ensureSpinner();
-    // Center on whichever display the cursor is currently on.
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-    const b = display.bounds;
+    // Position the pill just below the mouse cursor (so it lands next to the text
+    // being polished), clamped to the screen's work area so it never runs off-edge.
+    const cursor = screen.getCursorScreenPoint();
+    const wa = screen.getDisplayNearestPoint(cursor).workArea;
     const [ww, wh] = w.getSize();
-    w.setPosition(Math.round(b.x + (b.width - ww) / 2), Math.round(b.y + (b.height - wh) / 2));
+    let x = Math.round(cursor.x - ww / 2); // horizontally centered on the cursor
+    let y = Math.round(cursor.y + 10);     // just below the cursor
+    x = Math.max(wa.x + 8, Math.min(x, wa.x + wa.width - ww - 8));
+    y = Math.max(wa.y + 8, Math.min(y, wa.y + wa.height - wh - 8));
+    w.setPosition(x, y);
     w.showInactive(); // shows without stealing focus from the active app
     // Re-assert top-most and force to the front of the z-order. A transparent
     // always-on-top window on macOS can otherwise report visible while actually
