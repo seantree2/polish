@@ -75,9 +75,8 @@ async function getSelectedText() {
 // ---------- progress spinner (shown near the cursor while transforming) ----------
 let spinnerWin = null;
 
-function ensureSpinner() {
-  if (spinnerWin && !spinnerWin.isDestroyed()) return spinnerWin;
-  spinnerWin = new BrowserWindow({
+function createSpinner() {
+  const w = new BrowserWindow({
     width: 130,
     height: 34,
     show: false,
@@ -95,34 +94,39 @@ function ensureSpinner() {
     resizable: false,
     movable: false,
     hasShadow: false,
-    // backgroundThrottling off keeps the hidden renderer painting so the first
-    // reveal is never an unpainted frame.
     webPreferences: { contextIsolation: true, backgroundThrottling: false },
   });
-  spinnerWin.setAlwaysOnTop(true, 'screen-saver');
+  w.setAlwaysOnTop(true, 'screen-saver');
   // macOS: show over fullscreen apps / all Spaces (otherwise it's invisible
   // whenever the user works in a fullscreen window).
-  spinnerWin.setVisibleOnAllWorkspaces(true, { visibleOnFullScreenSpaces: true });
-  spinnerWin.setIgnoreMouseEvents(true);
-  spinnerWin.loadFile(path.join(__dirname, 'loading.html'));
-  return spinnerWin;
+  w.setVisibleOnAllWorkspaces(true, { visibleOnFullScreenSpaces: true });
+  w.setIgnoreMouseEvents(true);
+  return w;
 }
 
 function showSpinner() {
   try {
-    const w = ensureSpinner();
-    // Center the pill on whichever screen the cursor is currently on.
-    const b = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
-    const [ww, wh] = w.getSize();
-    const x = Math.round(b.x + (b.width - ww) / 2);
-    const y = Math.round(b.y + (b.height - wh) / 2);
-    w.setPosition(x, y);
-    w.showInactive(); // shows without stealing focus from the active app
-    // Re-assert top-most and force to the front of the z-order. A transparent
-    // always-on-top window on macOS can otherwise report visible while actually
-    // compositing behind the active app — which looks like "no spinner at all".
-    w.setAlwaysOnTop(true, 'screen-saver');
-    try { w.moveTop(); } catch { /* not available on every platform */ }
+    // Build a FRESH window every time. A long-idle hidden window can lose its
+    // render surface (macOS App Nap / compositor recycle) and then show blank —
+    // rebuilding guarantees the spinner always paints, even after the app has sat
+    // idle for a long time. (This is why quit+reopen used to "fix" it.)
+    if (spinnerWin && !spinnerWin.isDestroyed()) { try { spinnerWin.destroy(); } catch { /* ignore */ } }
+    const w = createSpinner();
+    spinnerWin = w;
+    // Reveal only once it has actually painted its first frame.
+    w.once('ready-to-show', () => {
+      if (!w || w.isDestroyed()) return;
+      try {
+        // Center on whichever screen the cursor is currently on.
+        const b = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).bounds;
+        const [ww, wh] = w.getSize();
+        w.setPosition(Math.round(b.x + (b.width - ww) / 2), Math.round(b.y + (b.height - wh) / 2));
+        w.showInactive(); // shows without stealing focus from the active app
+        w.setAlwaysOnTop(true, 'screen-saver');
+        try { w.moveTop(); } catch { /* not available on every platform */ }
+      } catch { /* ignore */ }
+    });
+    w.loadFile(path.join(__dirname, 'loading.html'));
   } catch {
     /* spinner is best-effort */
   }
@@ -130,10 +134,13 @@ function showSpinner() {
 
 function hideSpinner() {
   try {
-    if (spinnerWin && !spinnerWin.isDestroyed() && spinnerWin.isVisible()) spinnerWin.hide();
+    // Destroy (not just hide) so the next transform builds a guaranteed-fresh
+    // window — no stale hidden window left to go bad while the app is idle.
+    if (spinnerWin && !spinnerWin.isDestroyed()) spinnerWin.destroy();
   } catch {
     /* ignore */
   }
+  spinnerWin = null;
 }
 
 // ---------- the main action ----------
@@ -400,9 +407,8 @@ if (!gotLock) {
 
     registerShortcut();
 
-    // Pre-create the spinner window (hidden) so its HTML is already rendered
-    // the first time it's shown — otherwise the first use can show blank.
-    ensureSpinner();
+    // (The progress spinner window is built fresh on each shortcut press in
+    // showSpinner(), so there's nothing to pre-create here.)
 
     // Auto-update: only in packaged builds. Checks GitHub Releases, downloads in
     // the background, and installs on quit. Fails quietly if there's no release
