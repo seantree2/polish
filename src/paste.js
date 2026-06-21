@@ -20,12 +20,13 @@ function sleep(ms) {
 const WIN_COPY =
   'powershell -NoProfile -WindowStyle Hidden -Command ' +
   '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^c\')"';
-// Ctrl+Shift+V = "paste without formatting" / paste-and-match-style in most
-// editors (Google Docs, Gmail, etc.) — the pasted text takes on the existing
-// text's formatting instead of resetting it to the document default.
+// Plain Ctrl+V (regular paste). We deliberately avoid Ctrl+Shift+V: that's the
+// "paste and match style" shortcut only in web apps — native apps (Notepad, etc.)
+// don't recognize it, so the paste-back would silently do nothing. The clipboard
+// already holds plain text, so plain paste is equivalent and works everywhere.
 const WIN_PASTE =
   'powershell -NoProfile -WindowStyle Hidden -Command ' +
-  '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^+v\')"';
+  '"Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^v\')"';
 
 async function copySelection() {
   if (process.platform === 'darwin') {
@@ -39,12 +40,15 @@ async function copySelection() {
 
 async function pasteClipboard() {
   if (process.platform === 'darwin') {
-    // Cmd+Shift+V = paste and match style (keeps the existing text's formatting).
-    await run(`osascript -e 'tell application "System Events" to keystroke "v" using {command down, shift down}'`);
+    // Plain Cmd+V. NOT Cmd+Shift+V: that's "paste and match style" only in web
+    // apps (Google Docs, Gmail, Slack) — native Mac apps (Stickies, TextEdit,
+    // Notes, Mail) don't bind it, so the paste-back silently failed there. The
+    // clipboard holds plain text, so plain paste matches the surrounding style anyway.
+    await run(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
   } else if (process.platform === 'win32') {
     await run(WIN_PASTE);
   } else {
-    await run('xdotool key --clearmodifiers ctrl+shift+v');
+    await run('xdotool key --clearmodifiers ctrl+v');
   }
 }
 
