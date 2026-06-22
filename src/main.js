@@ -10,6 +10,13 @@ const store = require('./settingsStore');
 const { transformText } = require('./transform');
 const { copySelection, pasteClipboard, sleep } = require('./paste');
 
+// Render with the CPU instead of a separate GPU process. macOS suspends the GPU
+// process while this dock-hidden menu-bar app sits idle (App Nap); when the
+// shortcut was then used after a long idle, the refine still ran but the spinner
+// couldn't composite (napped GPU) and never appeared. Software rendering keeps the
+// small spinner painting reliably regardless of how long the app has been idle.
+app.disableHardwareAcceleration();
+
 const ASSETS = path.join(__dirname, '..', 'assets');
 
 const MODELS = [
