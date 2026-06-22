@@ -57,16 +57,24 @@ async function getSelectedText() {
   const sentinel = `__POLISH_${Date.now()}__`;
   clipboard.writeText(sentinel);
 
-  await copySelection();
+  // Let the shortcut's own keys (Cmd+L) lift before we synthesize Cmd+C. If a
+  // modifier is still held, the combined key state can garble the copy in strict
+  // native apps (e.g. Stickies, TextEdit), where it then silently captures
+  // nothing — even though the same copy works in browsers and on a manual Cmd+C.
+  await sleep(150);
 
-  // Poll briefly for the clipboard to change away from our sentinel.
+  // Copy, then poll briefly for the clipboard to change away from the sentinel.
+  // Retry the copy once if the first synthetic Cmd+C didn't register.
   let selected = '';
-  for (let i = 0; i < 16; i++) {
-    await sleep(40);
-    const current = clipboard.readText();
-    if (current && current !== sentinel) {
-      selected = current;
-      break;
+  for (let attempt = 0; attempt < 2 && !selected; attempt++) {
+    await copySelection();
+    for (let i = 0; i < 16; i++) {
+      await sleep(40);
+      const current = clipboard.readText();
+      if (current && current !== sentinel) {
+        selected = current;
+        break;
+      }
     }
   }
   return { selected, original };
