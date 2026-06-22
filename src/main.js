@@ -89,6 +89,12 @@ function createSpinner() {
     height: 34,
     show: false,
     frame: false,
+    // macOS: a 'panel' (NSPanel) is the window type that can float ABOVE another
+    // app's fullscreen Space. A normal window — even alwaysOnTop with
+    // visibleOnFullScreenSpaces — does NOT draw over a fullscreen app, which is why
+    // the spinner vanished in Slack/Notion/Claude Code when they were fullscreen but
+    // showed fine the moment those apps were in a normal window.
+    type: 'panel',
     // Transparent window sized to hug the pill. The ~0.4%-alpha backgroundColor
     // (#00000001) is the macOS workaround that lets the transparent window actually
     // composite over GPU/browser apps (Google Docs, Claude Code). Because the window
