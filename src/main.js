@@ -85,8 +85,8 @@ let spinnerWin = null;
 
 function createSpinner() {
   const w = new BrowserWindow({
-    width: 130,
-    height: 34,
+    width: 200,
+    height: 64,
     show: false,
     frame: false,
     // macOS: a 'panel' (NSPanel) is the window type that can float ABOVE another
@@ -95,11 +95,12 @@ function createSpinner() {
     // the spinner vanished in Slack/Notion/Claude Code when they were fullscreen but
     // showed fine the moment those apps were in a normal window.
     type: 'panel',
-    // Transparent window sized to hug the pill. The ~0.4%-alpha backgroundColor
-    // (#00000001) is the macOS workaround that lets the transparent window actually
-    // composite over GPU/browser apps (Google Docs, Claude Code). Because the window
-    // hugs the pill, that backing only fills the rounded-corner slivers — invisible,
-    // so there's no rectangle around the capsule.
+    // Transparent window. The ~0.4%-alpha backgroundColor (#00000001) is the macOS
+    // workaround that lets the transparent window actually composite over GPU/browser
+    // apps (Google Docs, Claude Code). The window is larger than the pill on purpose so
+    // the "Squash & Poof" exit animation's spring (the pill scales to 1.35) isn't
+    // clipped by the window edges; the 0.4%-alpha backing is imperceptible at any size,
+    // so there's still no visible rectangle around the capsule.
     transparent: true,
     backgroundColor: '#00000001',
     alwaysOnTop: true,
@@ -146,15 +147,27 @@ function showSpinner() {
   }
 }
 
-function hideSpinner() {
-  try {
-    // Destroy (not just hide) so the next transform builds a guaranteed-fresh
-    // window — no stale hidden window left to go bad while the app is idle.
-    if (spinnerWin && !spinnerWin.isDestroyed()) spinnerWin.destroy();
-  } catch {
-    /* ignore */
-  }
+function hideSpinner({ animate = false } = {}) {
+  // Release the reference immediately so the next transform always builds a fresh
+  // window — no stale hidden window left to go bad while the app is idle. (Any
+  // still-animating window below self-destroys on its own timer.)
+  const w = spinnerWin;
   spinnerWin = null;
+  if (!w || w.isDestroyed()) return;
+
+  if (!animate) {
+    try { w.destroy(); } catch { /* ignore */ }
+    return;
+  }
+
+  // Success: play the "Squash & Poof" exit (squash -> spring -> poof) in the
+  // renderer, then destroy the window once it has finished (600ms + a buffer).
+  try {
+    w.webContents
+      .executeJavaScript("var p=document.querySelector('.pill'); if (p) p.classList.add('poof');")
+      .catch(() => {});
+  } catch { /* ignore */ }
+  setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 660);
 }
 
 // ---------- the main action ----------
@@ -170,6 +183,7 @@ async function runTransform() {
 
   busy = true;
   setTrayState(true);
+  let ok = false;
   try {
     // Immediate feedback the moment the shortcut fires — shown BEFORE the copy
     // step and kept up through the whole copy -> Claude -> paste flow. The
@@ -193,6 +207,7 @@ async function runTransform() {
     clipboard.writeText(result);
     await sleep(60);
     await pasteClipboard();
+    ok = true; // refine succeeded — the spinner gets the "Squash & Poof" exit
 
     // Restore the user's previous clipboard once the paste has landed.
     setTimeout(() => {
@@ -205,7 +220,7 @@ async function runTransform() {
   } catch (err) {
     notify('Transform failed', String((err && err.message) || err));
   } finally {
-    hideSpinner();
+    hideSpinner({ animate: ok });
     busy = false;
     setTrayState(false);
   }
