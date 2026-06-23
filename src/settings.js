@@ -19,11 +19,6 @@ const isMac = () => navigator.platform.toLowerCase().includes('mac');
 const uid = () => 'p_' + Math.random().toString(36).slice(2, 9);
 const activePrompt = () => config.prompts.find((p) => p.id === config.activePromptId) || config.prompts[0];
 
-function modelSubtitle(id) {
-  return (id.startsWith('claude-fable') || id.startsWith('claude-opus') || id.startsWith('claude-sonnet'))
-    ? 'Adaptive thinking · high effort' : 'Standard mode';
-}
-
 function capLabels(accel) {
   const m = {
     CommandOrControl: isMac() ? '⌘' : 'Ctrl', CmdOrCtrl: isMac() ? '⌘' : 'Ctrl',
@@ -110,21 +105,36 @@ function shortcutCard() {
       </button>
     </section>`);
   const caps = card.querySelector('.caps');
+  const row = card.querySelector('.row');
+  let recording = false, keyH = null, downH = null, timer = null;
   const draw = () => { caps.classList.remove('recording'); caps.innerHTML = capLabels(config.shortcut).map((c) => `<kbd>${esc(c)}</kbd>`).join(''); };
-  draw();
-  card.querySelector('.row').addEventListener('click', () => {
+  function stop() {
+    recording = false;
+    window.removeEventListener('keydown', keyH, true);
+    document.removeEventListener('mousedown', downH, true);
+    clearTimeout(timer);
+    draw(); // revert to the saved shortcut's keys
+  }
+  function start() {
+    recording = true;
     caps.classList.add('recording');
     caps.innerHTML = '<span class="caps-hint">Press keys…</span>';
-    const handler = async (e) => {
+    keyH = async (e) => {
       e.preventDefault();
       const accel = accelFromEvent(e);
-      if (!accel) return;
-      window.removeEventListener('keydown', handler, true);
-      config.shortcut = accel; await saveNow(); draw();
+      if (!accel) return; // wait for a real modifier+key combo
+      config.shortcut = accel;
+      stop(); // draw() now shows the new keys
+      await saveNow();
     };
-    window.addEventListener('keydown', handler, true);
-    setTimeout(() => { if (caps.classList.contains('recording')) { window.removeEventListener('keydown', handler, true); draw(); } }, 6000);
-  });
+    // Cancel + revert if they click away (or click the keys again) without recording.
+    downH = (e) => { if (recording && !card.contains(e.target)) stop(); };
+    window.addEventListener('keydown', keyH, true);
+    document.addEventListener('mousedown', downH, true);
+    timer = setTimeout(stop, 6000);
+  }
+  row.addEventListener('click', () => { recording ? stop() : start(); });
+  draw();
   return card;
 }
 
@@ -135,7 +145,7 @@ function modelCard() {
     <section class="card" id="card-model">
       <div class="row">
         <span class="tile v">${ICON.cpu}</span>
-        <span class="main"><span class="title">Model</span><span class="sub modelsub">${esc(modelSubtitle(config.model))}</span></span>
+        <span class="main"><span class="title">Model</span></span>
         <span class="ctl">
           <div class="dd">
             <button class="dd-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Model">
@@ -164,7 +174,6 @@ function modelCard() {
     opt.addEventListener('click', async () => {
       config.model = opt.dataset.id;
       label.textContent = curLabel();
-      card.querySelector('.modelsub').textContent = modelSubtitle(config.model);
       pop.querySelectorAll('.dd-opt').forEach((o) => { const s = o.dataset.id === config.model; o.classList.toggle('sel', s); o.setAttribute('aria-selected', String(s)); });
       close();
       await saveNow();

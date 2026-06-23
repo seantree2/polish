@@ -100,7 +100,7 @@ button.row:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-rin
 .icon-fill { fill: currentColor; stroke: none; }
 
 .main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.title { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
+.title { font-size: 16.5px; font-weight: 600; letter-spacing: -.01em; color: var(--ink); }
 .sub { font-size: 14.5px; color: var(--muted); }
 .sub.ok { color: var(--teal); font-weight: 500; }
 .sub.warn { color: var(--danger); }
