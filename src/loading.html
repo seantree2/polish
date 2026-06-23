@@ -4,8 +4,12 @@
   <meta charset="utf-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
   <style>
-    html, body {
-      margin: 0; height: 100%; overflow: hidden; background: transparent;
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    /* Only BODY is the flex centering box, and it must FILL the window. Previously html
+       was ALSO display:flex, which made <body> a flex item that shrank to the pill's
+       width — then overflow:hidden clipped the pill's spring (scale 1.35) at its own
+       left/right edges the instant it expanded. Filling the window fixes that. */
+    body {
       display: flex; align-items: center; justify-content: center;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
