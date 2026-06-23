@@ -85,8 +85,8 @@ let spinnerWin = null;
 
 function createSpinner() {
   const w = new BrowserWindow({
-    width: 200,
-    height: 64,
+    width: 400,
+    height: 150,
     show: false,
     frame: false,
     // macOS: a 'panel' (NSPanel) is the window type that can float ABOVE another
@@ -97,10 +97,11 @@ function createSpinner() {
     type: 'panel',
     // Transparent window. The ~0.4%-alpha backgroundColor (#00000001) is the macOS
     // workaround that lets the transparent window actually composite over GPU/browser
-    // apps (Google Docs, Claude Code). The window is larger than the pill on purpose so
-    // the "Squash & Poof" exit animation's spring (the pill scales to 1.35) isn't
-    // clipped by the window edges; the 0.4%-alpha backing is imperceptible at any size,
-    // so there's still no visible rectangle around the capsule.
+    // apps (Google Docs, Claude Code). Sized GENEROUSLY larger than the pill so the
+    // "Squash & Poof" spring (pill scales to 1.35 — larger still when the user's system
+    // text is bigger) is never clipped by the window edges. The 0.4%-alpha backing is
+    // imperceptible at any size and mouse events pass through, so the empty margin is
+    // invisible and harmless — still no visible box around the centered capsule.
     transparent: true,
     backgroundColor: '#00000001',
     alwaysOnTop: true,
