@@ -184,15 +184,14 @@ function modelCard() {
 
 // ---------- prompt card (active shown; expand to manage all) ----------
 function promptCard(open) {
-  const a = activePrompt();
   const card = node(`
     <section class="card" id="card-prompt">
       <button class="row promenu ${open ? 'open' : ''}" type="button">
         <span class="tile v">${ICON.spark}</span>
-        <span class="main"><span class="title acttitle">${esc(a.name) || 'Untitled'}</span><span class="sub">Active prompt</span></span>
+        <span class="main"><span class="title acttitle"></span><span class="sub">Active prompt</span></span>
         <span class="ctl"><span class="dot"></span><span class="chev">${ICON.chevron}</span></span>
       </button>
-      <div class="prompt-inset acttext">${a.text ? esc(a.text) : '<span class="ph">No instruction yet</span>'}</div>
+      <div class="prompt-inset acttext"></div>
       <div class="drawer" ${open ? '' : 'hidden'}>
         <label class="dl">Name</label>
         <input class="field nameedit" />
@@ -209,38 +208,69 @@ function promptCard(open) {
   const title = card.querySelector('.acttitle');
   const nameEdit = card.querySelector('.nameedit');
   const textEdit = card.querySelector('.textedit');
-  nameEdit.value = a.name; textEdit.value = a.text;
-  inset.hidden = open;
+  const list = card.querySelector('.prompt-list');
+
+  // Update the active-prompt display IN PLACE (no card rebuild) so switching prompts
+  // never flashes/disappears. `animate` gives a soft cross-fade on the swapped content.
+  function paintActive(animate) {
+    const a = activePrompt();
+    title.textContent = a.name || 'Untitled';
+    inset.innerHTML = a.text ? esc(a.text) : '<span class="ph">No instruction yet</span>';
+    nameEdit.value = a.name;
+    textEdit.value = a.text;
+    list.querySelectorAll('.prompt-pick').forEach((it) => it.classList.toggle('active', it.dataset.id === config.activePromptId));
+    if (animate) {
+      for (const elx of [title, inset]) { elx.classList.remove('swap'); void elx.offsetWidth; elx.classList.add('swap'); }
+    }
+  }
+
+  function renderList() {
+    list.innerHTML = '';
+    for (const p of config.prompts) {
+      const item = node(`<div class="prompt-pick" data-id="${esc(p.id)}" role="button" tabindex="0"><span class="pradio"></span><span class="pname">${esc(p.name) || 'Untitled'}</span>${config.prompts.length > 1 ? '<button class="pdel" type="button" aria-label="Delete prompt">×</button>' : ''}</div>`);
+      const pick = () => { if (config.activePromptId === p.id) return; config.activePromptId = p.id; paintActive(true); saveNow(); };
+      item.addEventListener('click', pick);
+      item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } });
+      const d = item.querySelector('.pdel');
+      if (d) d.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        config.prompts = config.prompts.filter((x) => x.id !== p.id);
+        if (config.activePromptId === p.id) config.activePromptId = config.prompts[0].id;
+        renderList(); paintActive(true); await saveNow();
+      });
+      list.appendChild(item);
+    }
+  }
+
   row.addEventListener('click', () => {
     const willOpen = drawer.hidden;
     drawer.hidden = !willOpen; inset.hidden = willOpen; row.classList.toggle('open', willOpen);
   });
-  nameEdit.addEventListener('input', () => { a.name = nameEdit.value; title.textContent = a.name || 'Untitled'; saveSoon(); });
+  nameEdit.addEventListener('input', () => {
+    const a = activePrompt();
+    a.name = nameEdit.value;
+    title.textContent = a.name || 'Untitled';
+    const nm = list.querySelector(`.prompt-pick[data-id="${a.id}"] .pname`);
+    if (nm) nm.textContent = a.name || 'Untitled';
+    saveSoon();
+  });
   textEdit.addEventListener('input', () => {
+    const a = activePrompt();
     a.text = textEdit.value;
     inset.innerHTML = a.text ? esc(a.text) : '<span class="ph">No instruction yet</span>';
     saveSoon();
   });
-  const list = card.querySelector('.prompt-list');
-  for (const p of config.prompts) {
-    const item = node(`<div class="prompt-pick ${p.id === config.activePromptId ? 'active' : ''}"><span class="pradio"></span><button class="pname" type="button">${esc(p.name) || 'Untitled'}</button>${config.prompts.length > 1 ? '<button class="pdel" type="button" aria-label="Delete prompt">×</button>' : ''}</div>`);
-    item.querySelector('.pname').addEventListener('click', async () => { config.activePromptId = p.id; await saveNow(); document.getElementById('card-prompt').replaceWith(promptCard(true)); });
-    const d = item.querySelector('.pdel');
-    if (d) d.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      config.prompts = config.prompts.filter((x) => x.id !== p.id);
-      if (config.activePromptId === p.id) config.activePromptId = config.prompts[0].id;
-      await saveNow();
-      document.getElementById('card-prompt').replaceWith(promptCard(true));
-    });
-    list.appendChild(item);
-  }
   card.querySelector('.addp').addEventListener('click', async () => {
     const np = { id: uid(), name: 'New prompt', text: '' };
     config.prompts.push(np); config.activePromptId = np.id;
+    renderList(); paintActive(true);
+    nameEdit.focus(); nameEdit.select();
     await saveNow();
-    document.getElementById('card-prompt').replaceWith(promptCard(true));
   });
+
+  inset.hidden = open;
+  renderList();
+  paintActive(false);
   return card;
 }
 

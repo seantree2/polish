@@ -185,6 +185,11 @@ kbd {
 }
 .prompt-inset .ph { color: var(--faint); }
 
+/* soft cross-fade when switching the active prompt — the card is updated in place
+   (never rebuilt), so it no longer flashes/disappears on switch. */
+@keyframes fadeSwap { from { opacity: .35; } to { opacity: 1; } }
+.acttitle.swap, .acttext.swap { animation: fadeSwap .22s ease; }
+
 /* drawers (key manage + prompt manager) */
 .drawer { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
 .drawer[hidden] { display: none; }
