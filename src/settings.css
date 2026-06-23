@@ -15,6 +15,7 @@
   --accent: #6d55e0;
   --accent-strong: #5a40d0;
   --accent-ring: rgba(109, 85, 224, .32);
+  --accent-tint: rgba(109, 85, 224, .12);
   --teal: #18a06b;
   --danger: #d3453a;
   --tile-violet-bg: #e8e3fb;
@@ -140,18 +141,40 @@ kbd {
 .chev svg { width: 18px; height: 18px; }
 .row.open .chev { transform: rotate(180deg); }
 
-/* model select (native, styled to read as plain "Opus 4.8 ⌄") */
-.model-ctl { position: relative; }
-.modelsel {
-  appearance: none; -webkit-appearance: none;
-  border: none; background: transparent; cursor: pointer;
+/* model dropdown — own button + popup (per the Dropdown skill). The highlight is
+   bound to the OPEN state (aria-expanded), never :focus, so it can't get stuck; a
+   real mousedown-outside listener closes it on the first click away. Closed border
+   is transparent (no layout shift when the accent border appears on open). */
+.dd { position: relative; }
+.dd-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: transparent; border: 1.5px solid transparent; border-radius: 10px;
+  padding: 7px 9px 7px 12px;
   font: inherit; font-size: 15.5px; font-weight: 600; color: var(--ink);
-  padding: 6px 26px 6px 8px; border-radius: 9px;
-  text-align: right; text-align-last: right;
+  cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
-.modelsel:hover { background: var(--inset); }
-.modelsel:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
-.model-ctl .chev { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.dd-btn:hover { background: var(--inset); }
+.dd-btn[aria-expanded="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); background: #fff; }
+.dd-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dd-chev { display: inline-flex; color: var(--faint); transition: transform .2s ease; }
+.dd-chev svg { width: 17px; height: 17px; }
+.dd-btn[aria-expanded="true"] .dd-chev { transform: rotate(180deg); }
+.dd-pop {
+  position: absolute; right: 0; top: 100%; margin-top: 7px; z-index: 50;
+  min-width: 170px; max-height: 260px; overflow: auto;
+  background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 6px;
+  box-shadow: 0 12px 32px rgba(24, 20, 55, .15), 0 2px 6px rgba(24, 20, 55, .06);
+  animation: popIn .12s ease-out; transform-origin: top right;
+}
+.dd-pop[hidden] { display: none; }
+.dd-opt {
+  display: block; width: 100%; text-align: left;
+  padding: 9px 12px; border: none; border-radius: 9px; background: transparent;
+  font: inherit; font-size: 14.5px; color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+.dd-opt:hover { background: var(--inset); }
+.dd-opt.sel { background: var(--accent-tint); color: var(--accent-strong); font-weight: 600; }
+@keyframes popIn { from { opacity: 0; transform: translateY(-4px) scale(.98); } to { opacity: 1; transform: none; } }
 
 /* prompt inset (the active prompt's text, shown collapsed) */
 .prompt-inset {

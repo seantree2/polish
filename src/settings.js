@@ -130,25 +130,45 @@ function shortcutCard() {
 
 // ---------- model card ----------
 function modelCard() {
+  const curLabel = () => { const m = config.models.find((x) => x.id === config.model); return m ? m.label : config.model; };
   const card = node(`
     <section class="card" id="card-model">
       <div class="row">
         <span class="tile v">${ICON.cpu}</span>
         <span class="main"><span class="title">Model</span><span class="sub modelsub">${esc(modelSubtitle(config.model))}</span></span>
-        <span class="ctl model-ctl"><select class="modelsel" aria-label="Model"></select><span class="chev">${ICON.chevron}</span></span>
+        <span class="ctl">
+          <div class="dd">
+            <button class="dd-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Model">
+              <span class="dd-label">${esc(curLabel())}</span><span class="dd-chev">${ICON.chevron}</span>
+            </button>
+            <div class="dd-pop" role="listbox" hidden>
+              ${config.models.map((m) => `<button class="dd-opt ${m.id === config.model ? 'sel' : ''}" type="button" role="option" data-id="${esc(m.id)}" aria-selected="${m.id === config.model}">${esc(m.label)}</button>`).join('')}
+            </div>
+          </div>
+        </span>
       </div>
     </section>`);
-  const sel = card.querySelector('.modelsel');
-  for (const m of config.models) {
-    const o = document.createElement('option');
-    o.value = m.id; o.textContent = m.label;
-    if (m.id === config.model) o.selected = true;
-    sel.appendChild(o);
-  }
-  sel.addEventListener('change', async () => {
-    config.model = sel.value;
-    card.querySelector('.modelsub').textContent = modelSubtitle(config.model);
-    await saveNow();
+  const dd = card.querySelector('.dd');
+  const btn = card.querySelector('.dd-btn');
+  const pop = card.querySelector('.dd-pop');
+  const label = card.querySelector('.dd-label');
+  // Highlight (the accent border) is tied to aria-expanded, NOT focus, so it can
+  // never get stuck. A real mousedown-outside listener (only while open) closes it
+  // on the first click away — the thing a native <select> can't do.
+  const onDown = (e) => { if (!dd.contains(e.target)) close(); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  function close() { btn.setAttribute('aria-expanded', 'false'); pop.hidden = true; document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); }
+  function open() { btn.setAttribute('aria-expanded', 'true'); pop.hidden = false; document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey); }
+  btn.addEventListener('click', () => { (btn.getAttribute('aria-expanded') === 'true') ? close() : open(); });
+  pop.querySelectorAll('.dd-opt').forEach((opt) => {
+    opt.addEventListener('click', async () => {
+      config.model = opt.dataset.id;
+      label.textContent = curLabel();
+      card.querySelector('.modelsub').textContent = modelSubtitle(config.model);
+      pop.querySelectorAll('.dd-opt').forEach((o) => { const s = o.dataset.id === config.model; o.classList.toggle('sel', s); o.setAttribute('aria-selected', String(s)); });
+      close();
+      await saveNow();
+    });
   });
   return card;
 }
