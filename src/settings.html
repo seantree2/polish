@@ -7,73 +7,18 @@
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
-  <header>
-    <div class="logo">✦</div>
-    <div>
-      <h1>Polish</h1>
-      <p class="sub">Transform selected text anywhere with Claude.</p>
-    </div>
-  </header>
-
-  <main>
-    <section id="permSection" style="display:none;">
-      <h2>Mac permission</h2>
-      <p class="hint">Polish needs Accessibility access to copy your selection and paste the result.</p>
-      <div class="row">
-        <span id="permStatus" class="status"></span>
+  <div class="wrap">
+    <header class="head">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 C12.9 8.2, 15.8 11.1, 23 12 C15.8 12.9, 12.9 15.8, 12 23 C11.1 15.8, 8.2 12.9, 1 12 C8.2 11.1, 11.1 8.2, 12 1 Z"/></svg>
       </div>
-      <div class="row">
-        <button id="openPerm" class="secondary">Open Accessibility settings</button>
-        <button id="restartPerm">Restart Polish to apply</button>
+      <div>
+        <h1>Polish</h1>
+        <p class="sub">Transform selected text anywhere with Claude.</p>
       </div>
-      <p class="caption" id="permTip" style="display:none;">Just turned it on? macOS only notices after a restart — click “Restart Polish to apply.”</p>
-    </section>
-
-    <section>
-      <h2>Claude API key</h2>
-      <p class="hint">
-        Stored securely on this computer. Get one at
-        <a href="#" id="keyLink">console.anthropic.com</a>.
-      </p>
-      <div class="row">
-        <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off" />
-        <button id="saveKey">Save key</button>
-      </div>
-      <div class="row">
-        <button id="testBtn" class="secondary">Test connection</button>
-        <span id="keyStatus" class="status"></span>
-      </div>
-    </section>
-
-    <section>
-      <h2>Keyboard shortcut</h2>
-      <p class="hint">Select text in any app, then press this to improve it in place.</p>
-      <div class="row">
-        <input type="text" id="shortcut" readonly placeholder="Click “Record”…" />
-        <button id="recordBtn" class="secondary">Record</button>
-      </div>
-      <div class="row"><span id="shortcutStatus" class="status"></span></div>
-    </section>
-
-    <section>
-      <h2>Model</h2>
-      <select id="model"></select>
-      <p class="hint" id="modelNote"></p>
-    </section>
-
-    <section>
-      <h2>Prompts</h2>
-      <p class="hint">The Active prompt runs when you press the shortcut.</p>
-      <div id="prompts"></div>
-      <button id="addPrompt" class="secondary">+ Add prompt</button>
-    </section>
-  </main>
-
-  <footer>
-    <span id="savedNote" class="status"></span>
-    <button id="saveAll">Save settings</button>
-  </footer>
-
+    </header>
+    <main id="cards"></main>
+  </div>
   <script src="settings.js"></script>
 </body>
 </html>

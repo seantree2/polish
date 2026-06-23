@@ -13,9 +13,9 @@ const { copySelection, pasteClipboard, sleep } = require('./paste');
 const ASSETS = path.join(__dirname, '..', 'assets');
 
 const MODELS = [
-  { id: 'claude-opus-4-8', label: 'Claude Opus 4.8 — most capable' },
-  { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 — balanced' },
-  { id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 — fastest' },
+  { id: 'claude-opus-4-8', label: 'Opus 4.8' },
+  { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
+  { id: 'claude-haiku-4-5', label: 'Haiku 4.5' },
 ];
 
 let tray = null;
@@ -310,8 +310,8 @@ function openSettings() {
     return;
   }
   settingsWindow = new BrowserWindow({
-    width: 560,
-    height: 720,
+    width: 580,
+    height: 800,
     title: 'Polish — Settings',
     resizable: true,
     minimizable: true,
