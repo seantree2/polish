@@ -146,18 +146,15 @@ function startRecording() {
 async function refreshPermStatus() {
   const status = await window.polish.permStatus();
   const section = el('permSection');
-  if (!status) { section.style.display = 'none'; return; } // not macOS
+  // This section is only useful for first-run setup, so hide it entirely once it's
+  // no longer needed: on non-macOS, or as soon as Accessibility has been granted.
+  if (!status || status.accessibility) { section.style.display = 'none'; return; }
+  // Not granted yet — show the setup prompt.
   section.style.display = '';
-  if (status.accessibility) {
-    setStatus(el('permStatus'), '✓ Accessibility is granted — Polish can edit text in other apps.', 'ok');
-    el('restartPerm').style.display = 'none';
-    el('permTip').style.display = 'none';
-  } else {
-    setStatus(el('permStatus'), '✗ Accessibility is NOT granted yet — the shortcut will not work until Polish is enabled.', 'err');
-    // macOS only re-reads the grant on restart, so offer that explicitly.
-    el('restartPerm').style.display = '';
-    el('permTip').style.display = '';
-  }
+  setStatus(el('permStatus'), '✗ Accessibility is NOT granted yet — the shortcut will not work until Polish is enabled.', 'err');
+  // macOS only re-reads the grant on restart, so offer that explicitly.
+  el('restartPerm').style.display = '';
+  el('permTip').style.display = '';
 }
 
 el('openPerm').addEventListener('click', () => window.polish.openAccessibilitySettings());
