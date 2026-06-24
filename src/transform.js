@@ -1,6 +1,11 @@
 // Sends the selected text to Claude with the chosen prompt and returns
 // only the transformed text. Runs in the Electron main process so the
 // API key never reaches the renderer.
+//
+// PRIVACY: the input text and Claude's output are held only in memory here for the
+// lifetime of one request — they are never logged or written to disk. (To refine the
+// text it is, necessarily, sent to Anthropic's API over HTTPS; that is the only place
+// the text leaves the device, and the app itself stores none of it.)
 
 const Anthropic = require('@anthropic-ai/sdk');
 

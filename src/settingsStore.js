@@ -37,8 +37,18 @@ function readRaw() {
   }
 }
 
+// PRIVACY GUARD: config.json is the ONLY thing Polish ever writes to disk, and it must
+// never contain the text you refine. The writer below hard-limits what can be saved to
+// this explicit allowlist of setting keys — anything else (e.g. text accidentally
+// attached to the config object by future code) is dropped before it can touch disk.
+// The text you refine and Claude's output live ONLY in memory during a transform; they
+// are never written here, never logged, and never saved anywhere.
+const PERSIST_KEYS = ['shortcut', 'model', 'prompts', 'activePromptId', 'apiKeyEnc', 'apiKeyPlain'];
+
 function writeRaw(obj) {
-  fs.writeFileSync(configPath(), JSON.stringify(obj, null, 2));
+  const safe = {};
+  for (const key of PERSIST_KEYS) if (obj[key] !== undefined) safe[key] = obj[key];
+  fs.writeFileSync(configPath(), JSON.stringify(safe, null, 2));
 }
 
 function getConfig() {
