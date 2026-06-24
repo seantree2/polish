@@ -45,16 +45,10 @@ body {
   padding: 24px 22px 28px;
 }
 
-/* ---------- page-load reveal ---------- */
+/* ---------- opening: header + all cards fade up together as ONE unit (no card-by-card cascade) ---------- */
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.head, .card { animation: rise .5s cubic-bezier(.2, .7, .2, 1) backwards; }
-.head { animation-delay: .02s; }
-.card:nth-of-type(1) { animation-delay: .08s; }
-.card:nth-of-type(2) { animation-delay: .13s; }
-.card:nth-of-type(3) { animation-delay: .18s; }
-.card:nth-of-type(4) { animation-delay: .23s; }
-.card:nth-of-type(5) { animation-delay: .28s; }
-@media (prefers-reduced-motion: reduce) { .head, .card { animation: none; } }
+.head, #cards { animation: rise .45s cubic-bezier(.2, .7, .2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .head, #cards { animation: none; } }
 
 /* ---------- header ---------- */
 .head { display: flex; align-items: center; gap: 16px; padding: 6px 6px 22px; }
@@ -187,8 +181,8 @@ kbd {
 
 /* soft cross-fade when switching the active prompt — the card is updated in place
    (never rebuilt), so it no longer flashes/disappears on switch. */
-@keyframes fadeSwap { from { opacity: .35; } to { opacity: 1; } }
-.acttitle.swap, .acttext.swap { animation: fadeSwap .22s ease; }
+@keyframes fadeSwap { from { opacity: .25; } to { opacity: 1; } }
+.swap { animation: fadeSwap .24s ease; }
 
 /* drawers (key manage + prompt manager) */
 .drawer { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -215,6 +209,7 @@ textarea.field { resize: vertical; min-height: 76px; line-height: 1.5; }
   display: flex; align-items: center; gap: 11px;
   padding: 10px 12px; border-radius: 11px; border: 1px solid #ececf1;
   background: #fff; cursor: pointer; font: inherit; text-align: left;
+  transition: border-color .2s ease, background .2s ease;
 }
 .prompt-pick:hover { background: #faf9ff; border-color: var(--accent-ring); }
 .prompt-pick.active { border-color: var(--accent); background: #f7f5ff; }

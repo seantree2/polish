@@ -282,6 +282,7 @@ function buildTrayMenu() {
     { label: `Active prompt: ${active ? active.name : '—'}`, enabled: false },
     { label: `Shortcut: ${cfg.shortcut}`, enabled: false },
     { type: 'separator' },
+    { label: 'Polish selected text', click: runTransform },
     { label: 'Transform clipboard text', click: runTransformClipboard },
     { label: 'Settings…', click: openSettings },
     { type: 'separator' },
