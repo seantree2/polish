@@ -315,9 +315,10 @@ function openSettings() {
   }
   settingsWindow = new BrowserWindow({
     width: 580,
-    height: 800,
+    height: 600, // initial estimate only — the window auto-fits its content height (resize-to-content)
+    useContentSize: true,
     title: 'Polish — Settings',
-    resizable: true,
+    resizable: false, // height is driven by content, so no manual resizing / dead space
     minimizable: true,
     maximizable: false,
     fullscreenable: false,
@@ -383,6 +384,20 @@ function registerIpc() {
   ipcMain.handle('relaunch-app', () => {
     app.relaunch();
     app.exit(0);
+  });
+
+  // Auto-fit the Settings window to its content height (measured + sent by the
+  // renderer), so there's no dead space at the bottom and it grows/shrinks with the
+  // active prompt's length and the expandable drawers. Width is kept; clamped so it
+  // never exceeds the screen.
+  ipcMain.handle('resize-to-content', (_e, height) => {
+    if (!settingsWindow || settingsWindow.isDestroyed()) return;
+    const h = Math.round(Number(height) || 0);
+    if (!h) return;
+    const [w] = settingsWindow.getContentSize();
+    const disp = screen.getDisplayNearestPoint(settingsWindow.getBounds());
+    const maxH = Math.max(300, Math.round(disp.workAreaSize.height - 50));
+    settingsWindow.setContentSize(w, Math.max(180, Math.min(h, maxH)));
   });
 }
 

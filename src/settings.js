@@ -306,8 +306,24 @@ function render() {
   refreshPerm();
 }
 
+// Tell the main process how tall the content is, so the window fits it exactly
+// (no dead space) and grows/shrinks with the active prompt's length + the drawers.
+function fitWindow() {
+  if (!window.polish || !window.polish.resizeToContent) return;
+  const wrap = document.querySelector('.wrap');
+  if (!wrap || !cardsEl) return;
+  const padB = parseFloat(getComputedStyle(wrap).paddingBottom) || 0;
+  const h = Math.ceil(cardsEl.offsetTop + cardsEl.offsetHeight + padB);
+  if (h > 0) window.polish.resizeToContent(h);
+}
+
 async function load() {
   config = await window.polish.getConfig();
   render();
+  requestAnimationFrame(fitWindow);
+  // re-fit whenever the content height changes — drawer open/close, prompt switch,
+  // add/delete, permission card appearing, fonts settling, etc. (transform-only
+  // animations like the opening cascade don't change layout, so they don't trigger it)
+  try { new ResizeObserver(() => fitWindow()).observe(cardsEl); } catch { /* ignore */ }
 }
 load();

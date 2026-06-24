@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('polish', {
   permStatus: () => ipcRenderer.invoke('perm-status'),
   openAccessibilitySettings: () => ipcRenderer.invoke('open-accessibility-settings'),
   relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
+  resizeToContent: (height) => ipcRenderer.invoke('resize-to-content', height),
 });

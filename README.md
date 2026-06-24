@@ -90,9 +90,31 @@ time). Add certificates in `package.json` → `build` when ready to distribute.
   to the Settings window — only a "key saved" flag is.
 - The selection is captured by briefly setting the clipboard to a marker,
   simulating Copy, and reading what changed. Your previous clipboard is restored
-  about 1.5 seconds after pasting.
+  about 0.7 seconds after pasting.
 - Thinking is disabled and effort is set to `low` for fast, inline rewrites
   (Opus/Sonnet). Haiku is sent neither, since it doesn't accept the effort flag.
+
+---
+
+## Privacy & security
+
+Polish **never saves the text you refine.** Your selection and Claude's rewrite
+live only in memory for the few seconds of a transform — they are never written
+to disk, never logged (the app emits no logs at all), and never cached.
+
+- The only file Polish writes is `config.json` (in the OS user-data folder),
+  holding **only** your settings (shortcut, model, your prompt templates) and your
+  **API key, encrypted** by the OS keychain. The writer enforces a strict key
+  allowlist, so refined text can never land there even by accident.
+- Windows are hardened (context isolation on, Node integration off, local files
+  only, content-security-policy); the unused sharing/relay modules are excluded
+  from the packaged app.
+- **The one place text leaves your device:** to refine it, Polish sends it to
+  Anthropic's API over HTTPS — unavoidable for any cloud-AI tool. Anthropic does
+  not train on API inputs. Polish itself keeps none of it.
+
+**Verify it yourself:** refine a unique phrase, then run
+`grep -rl "your-phrase" ~/Library/Application\ Support/Polish/` — it finds nothing.
 
 ---
 
