@@ -14,6 +14,8 @@ const DEFAULTS = {
     { id: 'default', name: 'Improve writing', text: 'Make this text better.' },
   ],
   activePromptId: 'default',
+  // Soft "pop" when the spinner appears + finishes. On by default; toggled in Settings.
+  sound: true,
 };
 
 // Models that have been retired/suspended. Anyone whose saved config still
@@ -43,7 +45,7 @@ function readRaw() {
 // attached to the config object by future code) is dropped before it can touch disk.
 // The text you refine and Claude's output live ONLY in memory during a transform; they
 // are never written here, never logged, and never saved anywhere.
-const PERSIST_KEYS = ['shortcut', 'model', 'prompts', 'activePromptId', 'apiKeyEnc', 'apiKeyPlain'];
+const PERSIST_KEYS = ['shortcut', 'model', 'prompts', 'activePromptId', 'sound', 'apiKeyEnc', 'apiKeyPlain'];
 
 function writeRaw(obj) {
   const safe = {};
@@ -58,6 +60,7 @@ function getConfig() {
     model: normalizeModel(raw.model),
     prompts: Array.isArray(raw.prompts) && raw.prompts.length ? raw.prompts : DEFAULTS.prompts,
     activePromptId: raw.activePromptId || DEFAULTS.activePromptId,
+    sound: raw.sound !== false, // default on
   };
 }
 
@@ -73,7 +76,7 @@ function isFirstRun() {
 function saveConfig(partial) {
   const raw = readRaw();
   const next = { ...raw };
-  for (const key of ['shortcut', 'model', 'prompts', 'activePromptId']) {
+  for (const key of ['shortcut', 'model', 'prompts', 'activePromptId', 'sound']) {
     if (partial[key] !== undefined) next[key] = partial[key];
   }
   if (next.model !== undefined) next.model = normalizeModel(next.model);

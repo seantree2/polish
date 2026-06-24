@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; media-src 'self';" />
   <style>
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
     /* Only BODY is the flex centering box, and it must FILL the window. Previously html
@@ -18,20 +18,22 @@
       padding: 6px 17px; border-radius: 999px; /* 35% smaller than before */
       background: linear-gradient(160deg, #9179f4 0%, #7a5cee 100%);
       color: #fff; white-space: nowrap; /* no box-shadow at all — no glow */
+      animation: pill-in 140ms ease-out both; /* soft fade-in on appear (copied from the video) */
     }
     .label { font-size: 12px; font-weight: 700; letter-spacing: .2px; }
     .spark { width: 14px; height: 14px; flex: none; transform-origin: 50% 50%; animation: spin 1.1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Exit when a refine finishes: squash (gather) -> spring to a single peak -> poof.
-       No post-bounce settling oscillations; `forwards` leaves it gone at the end. */
-    @keyframes q-action-pop-out {
-      0%   { transform: scale(1);    opacity: 1; }
-      25%  { transform: scale(0.85); opacity: 1; }   /* squash — gather */
-      55%  { transform: scale(1.208); opacity: 1; }  /* spring peak — overshoot 0.208 (a further 15% less than 1.245) */
-      100% { transform: scale(0);    opacity: 0; }   /* poof */
+    /* Entrance + exit copied from the reference video: the pill FADES IN at full size
+       (~0.14s), and on finish it FADES OUT with a slight shrink (~0.28s). No squash, no
+       overshoot — a soft appear/disappear to match the sound. */
+    @keyframes pill-in  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes pill-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+    .pill.bye { animation: pill-out 280ms ease-in forwards; }
+    @media (prefers-reduced-motion: reduce) {
+      .pill { animation: none !important; }
+      .pill.bye { animation: none !important; opacity: 0; }
     }
-    .pill.poof { animation: q-action-pop-out 600ms cubic-bezier(0.4, 0, 0.2, 1) forwards; }
   </style>
 </head>
 <body>
@@ -41,5 +43,6 @@
       <path d="M12 1 C12.9 8.2, 15.8 11.1, 23 12 C15.8 12.9, 12.9 15.8, 12 23 C11.1 15.8, 8.2 12.9, 1 12 C8.2 11.1, 11.1 8.2, 12 1 Z" fill="#ffffff"/>
     </svg>
   </div>
+  <script src="loading.js"></script>
 </body>
 </html>

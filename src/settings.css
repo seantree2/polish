@@ -22,6 +22,8 @@
   --tile-violet-fg: #6a4fd8;
   --tile-mint-bg: #d8f0e7;
   --tile-mint-fg: #1a9870;
+  --tile-blue-bg: #dce8fb;
+  --tile-blue-fg: #2f6cd0;
   --font: 'Hanken Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -98,6 +100,7 @@ button.row:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-rin
 }
 .tile.v { background: var(--tile-violet-bg); color: var(--tile-violet-fg); }
 .tile.m { background: var(--tile-mint-bg); color: var(--tile-mint-fg); }
+.tile.b { background: var(--tile-blue-bg); color: var(--tile-blue-fg); }
 .tile svg { width: 25px; height: 25px; }
 .icon-stroke { fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .icon-fill { fill: currentColor; stroke: none; }
@@ -109,6 +112,21 @@ button.row:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-rin
 .sub.warn { color: var(--danger); }
 
 .ctl { flex: none; display: flex; align-items: center; gap: 8px; }
+
+/* sound on/off switch */
+.toggle {
+  width: 46px; height: 28px; flex: none; padding: 0; border: none; cursor: pointer;
+  border-radius: 999px; background: #d4d3dd; position: relative;
+  transition: background .22s ease;
+}
+.toggle[aria-checked="true"] { background: var(--accent); }
+.toggle .knob {
+  position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(24, 20, 55, .28);
+  transition: transform .22s cubic-bezier(.34, 1.45, .6, 1);
+}
+.toggle[aria-checked="true"] .knob { transform: translateX(18px); }
+.toggle:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--accent-ring); }
 
 /* pill buttons */
 .pill {

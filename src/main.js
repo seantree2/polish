@@ -97,11 +97,11 @@ function createSpinner() {
     type: 'panel',
     // Transparent window. The ~0.4%-alpha backgroundColor (#00000001) is the macOS
     // workaround that lets the transparent window actually composite over GPU/browser
-    // apps (Google Docs, Claude Code). Sized GENEROUSLY larger than the pill so the
-    // "Squash & Poof" spring (pill scales to 1.35 — larger still when the user's system
-    // text is bigger) is never clipped by the window edges. The 0.4%-alpha backing is
-    // imperceptible at any size and mouse events pass through, so the empty margin is
-    // invisible and harmless — still no visible box around the centered capsule.
+    // apps (Google Docs, Claude Code). Sized generously larger than the pill — the
+    // entrance fade-in and the gentle fade-out (slight shrink, copied from the reference
+    // video) stay well inside these bounds. The 0.4%-alpha backing is imperceptible at
+    // any size and mouse events pass through, so the empty margin is invisible and
+    // harmless — still no visible box around the centered capsule.
     transparent: true,
     backgroundColor: '#00000001',
     alwaysOnTop: true,
@@ -110,7 +110,9 @@ function createSpinner() {
     resizable: false,
     movable: false,
     hasShadow: false,
-    webPreferences: { contextIsolation: true, backgroundThrottling: false },
+    // autoplayPolicy lets the soft "pop" play without a user gesture (the spinner is
+    // shown programmatically, so there is no click to satisfy the default policy).
+    webPreferences: { contextIsolation: true, backgroundThrottling: false, autoplayPolicy: 'no-user-gesture-required' },
   });
   w.setAlwaysOnTop(true, 'screen-saver');
   // macOS: show over fullscreen apps / all Spaces (otherwise it's invisible
@@ -142,7 +144,10 @@ function showSpinner() {
         try { w.moveTop(); } catch { /* not available on every platform */ }
       } catch { /* ignore */ }
     });
-    w.loadFile(path.join(__dirname, 'loading.html'));
+    // Tell the spinner page whether to play the soft pop. Read fresh each time so the
+    // Settings toggle takes effect on the very next refine.
+    const soundOn = store.getConfig().sound !== false;
+    w.loadFile(path.join(__dirname, 'loading.html'), { query: { sound: soundOn ? '1' : '0' } });
   } catch {
     /* spinner is best-effort */
   }
@@ -161,14 +166,15 @@ function hideSpinner({ animate = false } = {}) {
     return;
   }
 
-  // Success: play the "Squash & Poof" exit (squash -> spring -> poof) in the
-  // renderer, then destroy the window once it has finished (600ms + a buffer).
+  // Success: gentle fade-out + soft pop, copied from the reference video. polishExit()
+  // in the page plays the pop (when sound is on) and adds .bye to start the fade; we then
+  // destroy the window once the fade + sound have finished (~0.4s sound, 0.28s fade).
   try {
     w.webContents
-      .executeJavaScript("var p=document.querySelector('.pill'); if (p) p.classList.add('poof');")
+      .executeJavaScript("window.polishExit ? window.polishExit() : (function(){var p=document.querySelector('.pill'); if(p)p.classList.add('bye');})();")
       .catch(() => {});
   } catch { /* ignore */ }
-  setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 660);
+  setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 600);
 }
 
 // ---------- the main action ----------

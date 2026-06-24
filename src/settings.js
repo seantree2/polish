@@ -11,6 +11,7 @@ const ICON = {
   spark: '<svg viewBox="0 0 24 24" class="icon-fill"><path d="M12 1 C12.9 8.2, 15.8 11.1, 23 12 C15.8 12.9, 12.9 15.8, 12 23 C11.1 15.8, 8.2 12.9, 1 12 C8.2 11.1, 11.1 8.2, 12 1 Z"/></svg>',
   chevron: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="m6 9 6 6 6-6"/></svg>',
   shield: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
+  sound: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="M11 4.5 6 9H2.8a.8.8 0 0 0-.8.8v4.4a.8.8 0 0 0 .8.8H6l5 4.5z"/><path d="M15.5 8.8a4.3 4.3 0 0 1 0 6.4M18.6 6a8 8 0 0 1 0 12"/></svg>',
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -46,7 +47,7 @@ function accelFromEvent(e) {
 // ---- saving (inline, auto) ----
 let saveT = null;
 function configPayload() {
-  return { shortcut: config.shortcut, model: config.model, prompts: config.prompts, activePromptId: config.activePromptId };
+  return { shortcut: config.shortcut, model: config.model, prompts: config.prompts, activePromptId: config.activePromptId, sound: config.sound };
 }
 function saveSoon() { clearTimeout(saveT); saveT = setTimeout(() => window.polish.saveConfig(configPayload()), 350); }
 async function saveNow() { clearTimeout(saveT); await window.polish.saveConfig(configPayload()); }
@@ -182,6 +183,26 @@ function modelCard() {
   return card;
 }
 
+// ---------- sound card (toggle the spinner pop) ----------
+function soundCard() {
+  const on = config.sound !== false;
+  const card = node(`
+    <section class="card" id="card-sound">
+      <div class="row">
+        <span class="tile b">${ICON.sound}</span>
+        <span class="main"><span class="title">Sound</span><span class="sub">Soft pop when the spinner appears &amp; finishes</span></span>
+        <span class="ctl"><button class="toggle" type="button" role="switch" aria-checked="${on}" aria-label="Sound effects"><span class="knob"></span></button></span>
+      </div>
+    </section>`);
+  const tg = card.querySelector('.toggle');
+  tg.addEventListener('click', async () => {
+    config.sound = !(tg.getAttribute('aria-checked') === 'true');
+    tg.setAttribute('aria-checked', String(config.sound));
+    await saveNow();
+  });
+  return card;
+}
+
 // ---------- prompt card (active shown; expand to manage all) ----------
 function promptCard(open) {
   const card = node(`
@@ -302,6 +323,7 @@ function render() {
   cardsEl.appendChild(keyCard());
   cardsEl.appendChild(shortcutCard());
   cardsEl.appendChild(modelCard());
+  cardsEl.appendChild(soundCard());
   cardsEl.appendChild(promptCard(false));
   refreshPerm();
 }
