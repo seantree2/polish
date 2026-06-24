@@ -45,10 +45,11 @@ body {
   padding: 24px 22px 28px;
 }
 
-/* ---------- opening: header fades in first, then the cards cascade in one-by-one,
-   top to bottom (matches Opening animation.mov: header lead, ~0.09s between cards) ---------- */
-@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-.head, .card { animation: rise .46s cubic-bezier(.2, .7, .2, 1) backwards; }
+/* ---------- opening: header fades in first, then the cards cascade in one-by-one, top to
+   bottom — each LANDS WITH A SPRING (overshoots its spot then settles). Easing is the
+   midpoint between the demo's "gentle" (1.56) and "big" (1.9) bounces, per the user's pick. ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+.head, .card { animation: rise .48s cubic-bezier(.4, 1.7, .6, 1) backwards; }
 .head { animation-delay: 0s; }
 .card:nth-of-type(1) { animation-delay: .11s; }
 .card:nth-of-type(2) { animation-delay: .20s; }
