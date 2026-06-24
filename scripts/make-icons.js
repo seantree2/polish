@@ -58,8 +58,10 @@ function drawIcon(size, kind) {
   const buf = Buffer.alloc(size * size * 4);
   const c = size / 2;
   const radius = size * 0.22;
-  const arm = size * 0.34;
-  const thick = size * 0.085;
+  // The menu-bar (template) sparkle is bolder + larger so it reads clearly as the
+  // diamond/sparkle at tiny sizes; the colour app icon keeps its daintier sparkle.
+  const arm = kind === 'template' ? size * 0.46 : size * 0.34;
+  const thick = kind === 'template' ? size * 0.165 : size * 0.085;
   const brand = [124, 92, 231]; // #7C5CE7
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {

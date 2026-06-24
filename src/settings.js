@@ -220,7 +220,7 @@ function promptCard(open) {
     textEdit.value = a.text;
     list.querySelectorAll('.prompt-pick').forEach((it) => it.classList.toggle('active', it.dataset.id === config.activePromptId));
     if (animate) {
-      for (const elx of [title, inset, nameEdit, textEdit]) { elx.classList.remove('swap'); void elx.offsetWidth; elx.classList.add('swap'); }
+      for (const elx of [inset, nameEdit, textEdit]) { elx.classList.remove('swap'); void elx.offsetWidth; elx.classList.add('swap'); } // title updates instantly (matches the video); content fields cross-fade
     }
   }
 
