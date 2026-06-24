@@ -210,14 +210,17 @@ async function runTransform() {
     await pasteClipboard();
     ok = true; // refine succeeded — the spinner gets the "Squash & Poof" exit
 
-    // Restore the user's previous clipboard once the paste has landed.
+    // Restore the user's previous clipboard ASAP once the paste has landed. The paste
+    // already completed during pasteClipboard() above, so 700ms never risks the paste
+    // grabbing the old clipboard — it just minimises how long the refined result sits on
+    // the clipboard (less window for any third-party clipboard manager to capture it).
     setTimeout(() => {
       try {
         clipboard.writeText(original);
       } catch {
         /* ignore */
       }
-    }, 1500);
+    }, 700);
   } catch (err) {
     notify('Transform failed', String((err && err.message) || err));
   } finally {
