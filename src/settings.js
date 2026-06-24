@@ -255,6 +255,8 @@ function promptCard(open) {
       const d = item.querySelector('.pdel');
       if (d) d.addEventListener('click', async (e) => {
         e.stopPropagation();
+        const ok = await window.polish.confirmDeletePrompt(p.name || 'Untitled');
+        if (!ok) return; // user cancelled — keep the prompt
         config.prompts = config.prompts.filter((x) => x.id !== p.id);
         if (config.activePromptId === p.id) config.activePromptId = config.prompts[0].id;
         renderList(); paintActive(true); await saveNow();

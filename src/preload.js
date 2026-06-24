@@ -13,4 +13,5 @@ contextBridge.exposeInMainWorld('polish', {
   openAccessibilitySettings: () => ipcRenderer.invoke('open-accessibility-settings'),
   relaunchApp: () => ipcRenderer.invoke('relaunch-app'),
   resizeToContent: (height) => ipcRenderer.invoke('resize-to-content', height),
+  confirmDeletePrompt: (name) => ipcRenderer.invoke('confirm-delete-prompt', name),
 });

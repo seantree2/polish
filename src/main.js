@@ -407,6 +407,22 @@ function registerIpc() {
     const maxH = Math.max(300, Math.round(disp.workAreaSize.height - 50));
     settingsWindow.setContentSize(w, Math.max(180, Math.min(h, maxH)));
   });
+
+  // Native confirm before deleting a prompt (shows as a sheet on the Settings window on
+  // macOS). Cancel is the default, so an accidental Enter/Return never deletes; returns
+  // true only when the user explicitly chooses Delete.
+  ipcMain.handle('confirm-delete-prompt', async (_e, name) => {
+    const opts = {
+      type: 'warning',
+      buttons: ['Delete', 'Cancel'],
+      defaultId: 1, cancelId: 1,
+      message: `Delete “${name || 'this prompt'}”?`,
+      detail: 'This prompt will be removed from Polish. This can’t be undone.',
+    };
+    const parent = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : null;
+    const { response } = await (parent ? dialog.showMessageBox(parent, opts) : dialog.showMessageBox(opts));
+    return response === 0;
+  });
 }
 
 // ---------- macOS: offer to install into /Applications ----------
