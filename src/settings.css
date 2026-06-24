@@ -190,8 +190,8 @@ kbd {
 
 /* soft cross-fade when switching the active prompt — the card is updated in place
    (never rebuilt), so it no longer flashes/disappears on switch. */
-@keyframes fadeSwap { from { opacity: .25; } to { opacity: 1; } }
-.swap { animation: fadeSwap .24s ease; }
+@keyframes fadeSwap { from { opacity: 0; } to { opacity: 1; } }
+.swap { animation: fadeSwap .32s ease; }
 
 /* drawers (key manage + prompt manager) */
 .drawer { padding: 0 18px 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -223,7 +223,7 @@ textarea.field { resize: vertical; min-height: 76px; line-height: 1.5; }
 .prompt-pick:hover { background: #faf9ff; border-color: var(--accent-ring); }
 .prompt-pick.active { border-color: var(--accent); background: #f7f5ff; }
 .prompt-pick .pradio { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 2px solid #cfced8; position: relative; transition: border-color .2s ease; }
-.prompt-pick .pradio::after { content: ''; position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%) scale(0); transition: transform .22s cubic-bezier(.34, 1.45, .6, 1); }
+.prompt-pick .pradio::after { content: ''; position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); transform: translate(-50%, -50%) scale(0); transition: transform .26s cubic-bezier(.34, 1.45, .6, 1); }
 .prompt-pick.active .pradio { border-color: var(--accent); }
 .prompt-pick.active .pradio::after { transform: translate(-50%, -50%) scale(1); }
 .prompt-pick .pname { flex: 1; min-width: 0; background: none; border: none; padding: 0; font: inherit; font-size: 14.5px; color: var(--ink); cursor: pointer; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
