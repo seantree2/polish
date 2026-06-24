@@ -60,7 +60,7 @@ body {
 @media (prefers-reduced-motion: reduce) { .head, .card { animation: none; } }
 
 /* ---------- header ---------- */
-.head { display: flex; align-items: center; gap: 16px; padding: 6px 6px 22px; }
+.head { display: flex; align-items: center; gap: 16px; padding: 0 6px 22px; } /* no top padding — the wrap's 24px is the top gap, matching the 24px bottom gap */
 .logo {
   width: 58px; height: 58px; flex: none;
   border-radius: 17px;
