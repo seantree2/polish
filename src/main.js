@@ -166,15 +166,17 @@ function hideSpinner({ animate = false } = {}) {
     return;
   }
 
-  // Success: gentle fade-out + soft pop, copied from the reference video. polishExit()
-  // in the page plays the pop (when sound is on) and adds .bye to start the fade; we then
-  // destroy the window once the fade + sound have finished (~0.4s sound, 0.28s fade).
+  // Success: gentle fade-out + the distinct "finish" sound (with its natural decay tail).
+  // polishExit() in the page plays pop-out.wav (when sound is on) and adds .bye to start
+  // the fade; we keep the now-invisible window alive until the sound's tail has fully rung
+  // out (~0.8s) so it's never cut off, then destroy it. (Transparent + click-through, so
+  // the extra idle time is imperceptible.)
   try {
     w.webContents
       .executeJavaScript("window.polishExit ? window.polishExit() : (function(){var p=document.querySelector('.pill'); if(p)p.classList.add('bye');})();")
       .catch(() => {});
   } catch { /* ignore */ }
-  setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 600);
+  setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 950);
 }
 
 // ---------- the main action ----------

@@ -190,7 +190,7 @@ function soundCard() {
     <section class="card" id="card-sound">
       <div class="row">
         <span class="tile b">${ICON.sound}</span>
-        <span class="main"><span class="title">Sound</span><span class="sub">Soft pop when the spinner appears &amp; finishes</span></span>
+        <span class="main"><span class="title">Sound</span><span class="sub">Soft sounds when the spinner appears &amp; finishes</span></span>
         <span class="ctl"><button class="toggle" type="button" role="switch" aria-checked="${on}" aria-label="Sound effects"><span class="knob"></span></button></span>
       </div>
     </section>`);
