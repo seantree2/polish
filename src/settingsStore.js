@@ -20,8 +20,9 @@ const DEFAULTS = {
 
 // Models that have been retired/suspended. Anyone whose saved config still
 // points at one is transparently moved to the recommended replacement, so the
-// app never tries to call a model the API will 404 on.
-const RETIRED_MODELS = { 'claude-fable-5': 'claude-opus-4-8' };
+// app never tries to call a model the API will 404 on. (Empty now — Fable 5 used
+// to be redirected here but is a current, selectable model.)
+const RETIRED_MODELS = {};
 
 function normalizeModel(model) {
   return RETIRED_MODELS[model] || model || DEFAULTS.model;

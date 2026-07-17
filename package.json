@@ -1,6 +1,6 @@
 {
   "name": "polish",
-  "version": "7.0.35",
+  "version": "7.0.36",
   "description": "Transform selected text anywhere with Claude, via a global keyboard shortcut.",
   "main": "src/main.js",
   "author": "Twinkling Tree",

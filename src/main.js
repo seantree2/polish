@@ -13,6 +13,7 @@ const { copySelection, pasteClipboard, sleep } = require('./paste');
 const ASSETS = path.join(__dirname, '..', 'assets');
 
 const MODELS = [
+  { id: 'claude-fable-5', label: 'Fable 5' },
   { id: 'claude-opus-4-8', label: 'Opus 4.8' },
   { id: 'claude-sonnet-4-6', label: 'Sonnet 4.6' },
   { id: 'claude-haiku-4-5', label: 'Haiku 4.5' },
