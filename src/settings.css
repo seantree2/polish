@@ -59,6 +59,7 @@ body {
 .card:nth-of-type(4) { animation-delay: .38s; }
 .card:nth-of-type(5) { animation-delay: .47s; }
 .card:nth-of-type(6) { animation-delay: .56s; }
+.card:nth-of-type(7) { animation-delay: .65s; }
 @media (prefers-reduced-motion: reduce) { .head, .card { animation: none; } }
 
 /* ---------- header ---------- */
@@ -82,6 +83,9 @@ body {
   border-radius: 18px;
   box-shadow: 0 1px 2px rgba(24, 20, 55, .04), 0 8px 24px rgba(24, 20, 55, .05);
 }
+/* greyed-out card — e.g. Effort Level when Haiku is selected (Haiku has no effort setting) */
+.card.disabled { opacity: .5; }
+.card.disabled .dd-btn { pointer-events: none; }
 
 .row {
   display: flex; align-items: center; gap: 15px;

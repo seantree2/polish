@@ -12,6 +12,7 @@ const ICON = {
   chevron: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="m6 9 6 6 6-6"/></svg>',
   shield: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>',
   sound: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="M11 4.5 6 9H2.8a.8.8 0 0 0-.8.8v4.4a.8.8 0 0 0 .8.8H6l5 4.5z"/><path d="M15.5 8.8a4.3 4.3 0 0 1 0 6.4M18.6 6a8 8 0 0 1 0 12"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" class="icon-stroke"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>',
 };
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -47,7 +48,7 @@ function accelFromEvent(e) {
 // ---- saving (inline, auto) ----
 let saveT = null;
 function configPayload() {
-  return { shortcut: config.shortcut, model: config.model, prompts: config.prompts, activePromptId: config.activePromptId, sound: config.sound };
+  return { shortcut: config.shortcut, model: config.model, prompts: config.prompts, activePromptId: config.activePromptId, sound: config.sound, effort: config.effort };
 }
 function saveSoon() { clearTimeout(saveT); saveT = setTimeout(() => window.polish.saveConfig(configPayload()), 350); }
 async function saveNow() { clearTimeout(saveT); await window.polish.saveConfig(configPayload()); }
@@ -175,12 +176,73 @@ function modelCard() {
     opt.addEventListener('click', async () => {
       config.model = opt.dataset.id;
       label.textContent = curLabel();
+      syncEffort(); // grey/ungrey the Effort card as the model changes (Haiku has no effort)
       pop.querySelectorAll('.dd-opt').forEach((o) => { const s = o.dataset.id === config.model; o.classList.toggle('sel', s); o.setAttribute('aria-selected', String(s)); });
       close();
       await saveNow();
     });
   });
   return card;
+}
+
+// ---------- effort card (how hard the model thinks) — sits right under Model ----------
+const EFFORTS = [
+  { id: 'low', label: 'Low' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'high', label: 'High' },
+  { id: 'xhigh', label: 'Xhigh' },
+  { id: 'max', label: 'Max' },
+];
+
+function effortCard() {
+  const curLabel = () => { const e = EFFORTS.find((x) => x.id === (config.effort || 'high')); return e ? e.label : 'High'; };
+  const card = node(`
+    <section class="card" id="card-effort">
+      <div class="row">
+        <span class="tile m">${ICON.sliders}</span>
+        <span class="main"><span class="title">Effort Level</span><span class="sub effort-sub">How hard the model thinks</span></span>
+        <span class="ctl">
+          <div class="dd">
+            <button class="dd-btn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Effort level">
+              <span class="dd-label">${esc(curLabel())}</span><span class="dd-chev">${ICON.chevron}</span>
+            </button>
+            <div class="dd-pop" role="listbox" hidden>
+              ${EFFORTS.map((e) => { const s = e.id === (config.effort || 'high'); return `<button class="dd-opt ${s ? 'sel' : ''}" type="button" role="option" data-id="${esc(e.id)}" aria-selected="${s}">${esc(e.label)}</button>`; }).join('')}
+            </div>
+          </div>
+        </span>
+      </div>
+    </section>`);
+  const dd = card.querySelector('.dd');
+  const btn = card.querySelector('.dd-btn');
+  const pop = card.querySelector('.dd-pop');
+  const label = card.querySelector('.dd-label');
+  const onDown = (e) => { if (!dd.contains(e.target)) close(); };
+  const onKey = (e) => { if (e.key === 'Escape') close(); };
+  function close() { btn.setAttribute('aria-expanded', 'false'); pop.hidden = true; document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); }
+  function open() { btn.setAttribute('aria-expanded', 'true'); pop.hidden = false; document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey); }
+  btn.addEventListener('click', () => { (btn.getAttribute('aria-expanded') === 'true') ? close() : open(); });
+  pop.querySelectorAll('.dd-opt').forEach((opt) => {
+    opt.addEventListener('click', async () => {
+      config.effort = opt.dataset.id;
+      label.textContent = curLabel();
+      pop.querySelectorAll('.dd-opt').forEach((o) => { const s = o.dataset.id === config.effort; o.classList.toggle('sel', s); o.setAttribute('aria-selected', String(s)); });
+      close();
+      await saveNow();
+    });
+  });
+  return card;
+}
+
+// Effort doesn't apply to Haiku (the API rejects the effort param there), so grey the
+// card out + note it whenever Haiku is the selected model.
+function syncEffort() {
+  const card = document.getElementById('card-effort');
+  if (!card) return;
+  const haiku = /haiku/i.test(config.model || '');
+  card.classList.toggle('disabled', haiku);
+  const sub = card.querySelector('.effort-sub');
+  if (sub) sub.textContent = haiku ? 'Not used by Haiku (it has no effort setting)' : 'How hard the model thinks';
 }
 
 // ---------- sound card (toggle the spinner pop) ----------
@@ -325,8 +387,10 @@ function render() {
   cardsEl.appendChild(keyCard());
   cardsEl.appendChild(shortcutCard());
   cardsEl.appendChild(modelCard());
+  cardsEl.appendChild(effortCard());
   cardsEl.appendChild(soundCard());
   cardsEl.appendChild(promptCard(false));
+  syncEffort();
   refreshPerm();
 }
 

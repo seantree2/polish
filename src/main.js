@@ -37,7 +37,7 @@ async function callModel(cfg, text) {
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(new Error('Polish timed out — please try again')), 75000);
   try {
-    return await transformText({ apiKey, model: cfg.model, promptText: prompt.text, text, signal: ac.signal });
+    return await transformText({ apiKey, model: cfg.model, promptText: prompt.text, text, signal: ac.signal, effort: cfg.effort });
   } finally {
     clearTimeout(timer);
   }

@@ -25,7 +25,7 @@ function estimateMaxTokens(text) {
   return Math.min(16000, Math.max(4096, est));
 }
 
-async function transformText({ apiKey, model, promptText, text, signal }) {
+async function transformText({ apiKey, model, promptText, text, signal, effort }) {
   const client = new Anthropic({ apiKey, timeout: 90000 });
 
   const params = {
@@ -37,13 +37,13 @@ async function transformText({ apiKey, model, promptText, text, signal }) {
     ],
   };
 
-  // Fable 5, Opus 4.8, and Sonnet 4.6: adaptive thinking (Claude decides how
-  // much to think per request) + HIGH effort for the strongest rewrites.
-  // (Verified via the Models API: all three support adaptive + effort.)
+  // Fable 5, Opus 4.8, and Sonnet 4.6: adaptive thinking (Claude decides how much
+  // to think per request) + the user-selected effort level (Settings → Effort Level;
+  // default high). All three support adaptive + effort (verified via the Models API).
   // Haiku 4.5 doesn't accept the effort parameter, so we send neither.
   if (model.startsWith('claude-fable') || model.startsWith('claude-opus') || model.startsWith('claude-sonnet')) {
     params.thinking = { type: 'adaptive' };
-    params.output_config = { effort: 'high' };
+    params.output_config = { effort: effort || 'high' };
   }
 
   const message = await client.messages.create(params, signal ? { signal } : {});
