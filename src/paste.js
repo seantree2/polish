@@ -3,7 +3,7 @@
 // SendKeys on Windows, xdotool on Linux) so there are no native modules to
 // compile — which keeps the app easy to build and package.
 
-const { exec } = require('child_process');
+const { exec, execFile } = require('child_process');
 
 function run(cmd) {
   return new Promise((resolve, reject) => {
@@ -52,4 +52,39 @@ async function pasteClipboard() {
   }
 }
 
-module.exports = { copySelection, pasteClipboard, sleep };
+// Run an AppleScript via execFile — NO shell is spawned, so an interpolated value (a
+// bundle id) can never be interpreted as a shell command. Resolves the script's stdout.
+// Short 1.5s timeout: these run on the Cmd+L critical path, so if the call ever hangs
+// (e.g. a permission stall) it fails fast and we fall back to normal pasting rather
+// than stalling the refine for seconds.
+function osa(script) {
+  return new Promise((resolve, reject) => {
+    execFile('osascript', ['-e', script], { timeout: 1500 }, (err, stdout) => (err ? reject(err) : resolve(stdout || '')));
+  });
+}
+
+// Capture which app is frontmost right now (macOS), so runTransform can paste the
+// refined text back into the SAME window even if the user switches apps while the
+// refine is running. Returns a bundle identifier, or null if it can't be determined.
+async function getFrontmostApp() {
+  if (process.platform !== 'darwin') return null;
+  try {
+    const out = await osa('tell application "System Events" to get bundle identifier of first application process whose frontmost is true');
+    const id = (out || '').trim();
+    return /^[a-zA-Z0-9][a-zA-Z0-9.-]*$/.test(id) ? id : null; // reverse-DNS bundle id only
+  } catch {
+    return null;
+  }
+}
+
+// Bring a previously-captured app back to the front (macOS) before pasting. Best-effort:
+// if it fails, we just paste wherever focus currently is (the old behaviour).
+async function activateApp(bundleId) {
+  if (process.platform !== 'darwin' || !bundleId) return;
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9.-]*$/.test(bundleId)) return; // reverse-DNS id only — no metachars reach AppleScript
+  try {
+    await osa(`tell application id "${bundleId}" to activate`);
+  } catch { /* best-effort */ }
+}
+
+module.exports = { copySelection, pasteClipboard, sleep, getFrontmostApp, activateApp };

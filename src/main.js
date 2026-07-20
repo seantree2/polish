@@ -8,7 +8,7 @@ const path = require('path');
 
 const store = require('./settingsStore');
 const { transformText } = require('./transform');
-const { copySelection, pasteClipboard, sleep } = require('./paste');
+const { copySelection, pasteClipboard, sleep, getFrontmostApp, activateApp } = require('./paste');
 
 const ASSETS = path.join(__dirname, '..', 'assets');
 
@@ -54,6 +54,9 @@ function notify(title, body) {
 
 // ---------- selection capture ----------
 async function getSelectedText() {
+  // Capture which app owns the selection right now, so runTransform can paste the
+  // result back into it even if the user switches windows mid-refine.
+  const frontApp = await getFrontmostApp();
   const original = clipboard.readText();
   const sentinel = `__POLISH_${Date.now()}__`;
   clipboard.writeText(sentinel);
@@ -78,7 +81,7 @@ async function getSelectedText() {
       }
     }
   }
-  return { selected, original };
+  return { selected, original, frontApp };
 }
 
 // ---------- progress spinner (shown near the cursor while transforming) ----------
@@ -201,7 +204,7 @@ async function runTransform() {
     // whether we finish, find nothing selected, or hit an error.
     showSpinner();
 
-    const { selected, original } = await getSelectedText();
+    const { selected, original, frontApp } = await getSelectedText();
     if (!selected || !selected.trim()) {
       notify('Nothing selected', 'Select some text first, then press the shortcut.');
       return;
@@ -215,9 +218,12 @@ async function runTransform() {
     }
 
     clipboard.writeText(result);
-    await sleep(60);
+    // Restore focus to the window the user started in, so the result pastes THERE even
+    // if they switched apps while the refine was in flight — then paste.
+    await activateApp(frontApp);
+    await sleep(150);
     await pasteClipboard();
-    ok = true; // refine succeeded — the spinner gets the "Squash & Poof" exit
+    ok = true; // refine succeeded — the spinner gets its fade-out exit
 
     // Restore the user's previous clipboard ASAP once the paste has landed. The paste
     // already completed during pasteClipboard() above, so 700ms never risks the paste
