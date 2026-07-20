@@ -190,7 +190,7 @@ const EFFORTS = [
   { id: 'low', label: 'Low' },
   { id: 'medium', label: 'Medium' },
   { id: 'high', label: 'High' },
-  { id: 'xhigh', label: 'Xhigh' },
+  { id: 'xhigh', label: 'Extra high' },
   { id: 'max', label: 'Max' },
 ];
 
