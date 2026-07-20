@@ -28,16 +28,17 @@ function activePrompt(cfg) {
   return cfg.prompts.find((p) => p.id === cfg.activePromptId) || cfg.prompts[0];
 }
 
-async function callModel(cfg, text) {
+async function callModel(cfg, text, ac) {
   const prompt = activePrompt(cfg);
   const apiKey = store.getApiKey();
   if (!apiKey) throw new Error('No API key saved. Open Settings and add your Claude API key.');
-  // Hard cap: abort a hung/slow request after 75s so it can never leave the app
-  // stuck "busy" (which previously made the shortcut stop working until restart).
-  const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort(new Error('Polish timed out — please try again')), 75000);
+  // Use the caller's AbortController when given (so Cmd+Escape can cancel), otherwise our
+  // own. Hard cap either way: abort a hung/slow request after 75s so it can never leave
+  // the app stuck "busy" (which previously made the shortcut stop working until restart).
+  const controller = ac || new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error('Polish timed out — please try again')), 75000);
   try {
-    return await transformText({ apiKey, model: cfg.model, promptText: prompt.text, text, signal: ac.signal, effort: cfg.effort });
+    return await transformText({ apiKey, model: cfg.model, promptText: prompt.text, text, signal: controller.signal, effort: cfg.effort });
   } finally {
     clearTimeout(timer);
   }
@@ -183,6 +184,17 @@ function hideSpinner({ animate = false } = {}) {
   setTimeout(() => { try { if (!w.isDestroyed()) w.destroy(); } catch { /* ignore */ } }, 950);
 }
 
+// Cancel support: Cmd+Escape (registered only while a refine runs) aborts the current
+// request. currentAbort points at the in-flight AbortController; `cancelled` tells the
+// runTransform catch/finally to treat the resulting abort as a user cancel, not an error.
+let currentAbort = null;
+let cancelled = false;
+function cancelCurrent() {
+  if (!busy) return;
+  cancelled = true;
+  if (currentAbort) { try { currentAbort.abort(new Error('__POLISH_CANCELLED__')); } catch { /* ignore */ } }
+}
+
 // ---------- the main action ----------
 async function runTransform() {
   if (busy) return;
@@ -196,7 +208,14 @@ async function runTransform() {
 
   busy = true;
   setTrayState(true);
+  cancelled = false;
+  const ac = new AbortController();
+  currentAbort = ac;
+  // Cmd+Escape cancels — registered ONLY while a refine runs, so it never grabs that
+  // key combo when Polish is idle.
+  try { globalShortcut.register('CommandOrControl+Escape', cancelCurrent); } catch { /* best-effort */ }
   let ok = false;
+  let original = null; // hoisted so a cancel can restore the clipboard in `finally`
   try {
     // Immediate feedback the moment the shortcut fires — shown BEFORE the copy
     // step and kept up through the whole copy -> Claude -> paste flow. The
@@ -204,13 +223,17 @@ async function runTransform() {
     // whether we finish, find nothing selected, or hit an error.
     showSpinner();
 
-    const { selected, original, frontApp } = await getSelectedText();
+    const sel = await getSelectedText();
+    original = sel.original;
+    if (cancelled) return; // cancelled during the copy step
+    const { selected, frontApp } = sel;
     if (!selected || !selected.trim()) {
       notify('Nothing selected', 'Select some text first, then press the shortcut.');
       return;
     }
 
-    const result = await callModel(cfg, selected);
+    const result = await callModel(cfg, selected, ac);
+    if (cancelled) return;
 
     if (!result) {
       notify('No result', 'Claude returned an empty response.');
@@ -237,8 +260,15 @@ async function runTransform() {
       }
     }, 700);
   } catch (err) {
-    notify('Transform failed', String((err && err.message) || err));
+    // A Cmd+Escape cancel aborts the request and lands here — stop quietly, no error toast.
+    if (!cancelled) notify('Transform failed', String((err && err.message) || err));
   } finally {
+    try { globalShortcut.unregister('CommandOrControl+Escape'); } catch { /* ignore */ }
+    currentAbort = null;
+    if (cancelled) {
+      if (original != null) { try { clipboard.writeText(original); } catch { /* ignore */ } }
+      notify('Polish cancelled', 'Stopped.');
+    }
     hideSpinner({ animate: ok });
     busy = false;
     setTrayState(false);
