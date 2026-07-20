@@ -1,6 +1,6 @@
 {
   "name": "polish",
-  "version": "7.0.38",
+  "version": "7.0.39",
   "description": "Transform selected text anywhere with Claude, via a global keyboard shortcut.",
   "main": "src/main.js",
   "author": "Twinkling Tree",
@@ -53,7 +53,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "seantree2",
+        "owner": "cherish-mei",
         "repo": "polish"
       }
     ]
