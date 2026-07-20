@@ -274,7 +274,6 @@ function promptCard(open) {
         <span class="main"><span class="title acttitle"></span><span class="sub">Active prompt</span></span>
         <span class="ctl"><span class="dot"></span><span class="chev">${ICON.chevron}</span></span>
       </button>
-      <div class="prompt-inset acttext"></div>
       <div class="drawer" ${open ? '' : 'hidden'}>
         <label class="dl">Name</label>
         <input class="field nameedit" />
@@ -286,7 +285,6 @@ function promptCard(open) {
       </div>
     </section>`);
   const drawer = card.querySelector('.drawer');
-  const inset = card.querySelector('.acttext');
   const row = card.querySelector('.promenu');
   const title = card.querySelector('.acttitle');
   const nameEdit = card.querySelector('.nameedit');
@@ -298,12 +296,11 @@ function promptCard(open) {
   function paintActive(animate) {
     const a = activePrompt();
     title.textContent = a.name || 'Untitled';
-    inset.innerHTML = a.text ? esc(a.text) : '<span class="ph">No instruction yet</span>';
     nameEdit.value = a.name;
     textEdit.value = a.text;
     list.querySelectorAll('.prompt-pick').forEach((it) => it.classList.toggle('active', it.dataset.id === config.activePromptId));
     if (animate) {
-      for (const elx of [inset, nameEdit, textEdit]) { elx.classList.remove('swap'); void elx.offsetWidth; elx.classList.add('swap'); } // title updates instantly (matches the video); content fields cross-fade
+      for (const elx of [nameEdit, textEdit]) { elx.classList.remove('swap'); void elx.offsetWidth; elx.classList.add('swap'); } // content fields cross-fade on prompt switch
     }
   }
 
@@ -329,7 +326,7 @@ function promptCard(open) {
 
   row.addEventListener('click', () => {
     const willOpen = drawer.hidden;
-    drawer.hidden = !willOpen; inset.hidden = willOpen; row.classList.toggle('open', willOpen);
+    drawer.hidden = !willOpen; row.classList.toggle('open', willOpen);
   });
   nameEdit.addEventListener('input', () => {
     const a = activePrompt();
@@ -342,7 +339,6 @@ function promptCard(open) {
   textEdit.addEventListener('input', () => {
     const a = activePrompt();
     a.text = textEdit.value;
-    inset.innerHTML = a.text ? esc(a.text) : '<span class="ph">No instruction yet</span>';
     saveSoon();
   });
   card.querySelector('.addp').addEventListener('click', async () => {
@@ -353,7 +349,6 @@ function promptCard(open) {
     await saveNow();
   });
 
-  inset.hidden = open;
   renderList();
   paintActive(false);
   return card;
